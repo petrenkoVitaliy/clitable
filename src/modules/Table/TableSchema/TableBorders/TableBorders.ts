@@ -1,7 +1,7 @@
-import { TablePartial } from './TablePartial';
-import { ROW_TYPES } from '../constants';
+import { BorderPartial } from './BorderPartial';
+import { ROW_TYPES } from './constants';
 
-export class TableRow extends TablePartial {
+class TableBorders extends BorderPartial {
     private static rowTypes: {
         [key in ROW_TYPES]: Array<(colSizes: number[]) => string>;
     } = {
@@ -11,10 +11,7 @@ export class TableRow extends TablePartial {
             this.generateRowPartial.SeparatorLine,
         ],
 
-        Footer: [
-            this.generateRowPartial.ContentLine,
-            this.generateRowPartial.BottomLine,
-        ],
+        Footer: [this.generateRowPartial.ContentLine, this.generateRowPartial.BottomLine],
 
         Body: [
             this.generateRowPartial.ContentLine,
@@ -28,7 +25,7 @@ export class TableRow extends TablePartial {
         ],
     };
 
-    public static getTableRowsConfig(
+    public static getBordersStructure(
         rowsCount: number
     ): Array<(colSizes: number[]) => string>[] {
         if (rowsCount === 1) {
@@ -47,3 +44,5 @@ export class TableRow extends TablePartial {
         });
     }
 }
+
+export { TableBorders };

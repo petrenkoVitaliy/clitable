@@ -1,12 +1,7 @@
-import { BORDERS } from '../constants';
+import { BORDERS } from './constants';
+import { RowPartial } from './types';
 
-type RowPartial = {
-    partial: string;
-    colSizes: number[];
-    separatedBy: string;
-};
-
-export class TablePartial {
+abstract class BorderPartial {
     private static constructRow = (rowParts: (string | RowPartial)[]) => {
         return rowParts
             .map((rowPart) => {
@@ -14,9 +9,7 @@ export class TablePartial {
                     ? rowPart
                     : Array.from(Array(rowPart.colSizes.length))
                           .map((_, index) =>
-                              rowPart.partial.repeat(
-                                  rowPart.colSizes[index] || 1
-                              )
+                              rowPart.partial.repeat(rowPart.colSizes[index] || 1)
                           )
                           .join(rowPart.separatedBy);
             })
@@ -69,3 +62,5 @@ export class TablePartial {
             ]),
     };
 }
+
+export { BorderPartial };

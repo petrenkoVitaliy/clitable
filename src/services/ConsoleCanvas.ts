@@ -1,4 +1,4 @@
-import { getConsoleCursorPosition } from './modules';
+import { getConsoleCursorPosition } from '../utils/screenBuffer';
 import * as ansiEscapes from 'sisteransi';
 
 const ESC = '\u001B[';
