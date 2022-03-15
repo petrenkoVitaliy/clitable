@@ -2,8 +2,11 @@ import { BORDERS } from './constants';
 import { RowPartial } from './types';
 
 abstract class BorderPartial {
-    private static constructRow = (rowParts: (string | RowPartial)[]) => {
-        return rowParts
+    private static constructRow = (
+        rowParts: (string | RowPartial)[],
+        height: number = 1
+    ) => {
+        const singleRow = rowParts
             .map((rowPart) => {
                 return typeof rowPart === 'string'
                     ? rowPart
@@ -14,48 +17,58 @@ abstract class BorderPartial {
                           .join(rowPart.separatedBy);
             })
             .join('');
+
+        let row = singleRow;
+        for (let i = 1; i < height; i++) {
+            row += `\n${singleRow}`;
+        }
+
+        return row;
     };
 
     protected static generateRowPartial = {
-        TopLine: (colSizes: number[]) =>
+        TopLine: (sizes: { height: number; cols: number[] }) =>
             this.constructRow([
                 BORDERS.topLeft,
                 {
                     separatedBy: BORDERS.topCenter,
-                    colSizes,
+                    colSizes: sizes.cols,
                     partial: BORDERS.horizontal,
                 },
                 BORDERS.topRight,
             ]),
 
-        ContentLine: (colSizes: number[]) =>
-            this.constructRow([
-                BORDERS.vertical,
-                {
-                    separatedBy: BORDERS.vertical,
-                    colSizes,
-                    partial: ' ',
-                },
-                BORDERS.vertical,
-            ]),
+        ContentLine: (sizes: { height: number; cols: number[] }) =>
+            this.constructRow(
+                [
+                    BORDERS.vertical,
+                    {
+                        separatedBy: BORDERS.vertical,
+                        colSizes: sizes.cols,
+                        partial: ' ',
+                    },
+                    BORDERS.vertical,
+                ],
+                sizes.height
+            ),
 
-        BottomLine: (colSizes: number[]) =>
+        BottomLine: (sizes: { height: number; cols: number[] }) =>
             this.constructRow([
                 BORDERS.bottomLeft,
                 {
                     separatedBy: BORDERS.bottomCenter,
-                    colSizes,
+                    colSizes: sizes.cols,
                     partial: BORDERS.horizontal,
                 },
                 BORDERS.bottomRight,
             ]),
 
-        SeparatorLine: (colSizes: number[]) =>
+        SeparatorLine: (sizes: { height: number; cols: number[] }) =>
             this.constructRow([
                 BORDERS.middleLeft,
                 {
                     separatedBy: BORDERS.middleCenter,
-                    colSizes,
+                    colSizes: sizes.cols,
                     partial: BORDERS.horizontal,
                 },
                 BORDERS.middleRight,

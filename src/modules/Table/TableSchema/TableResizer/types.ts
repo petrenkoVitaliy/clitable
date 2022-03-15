@@ -3,6 +3,8 @@ import { ExpansionType } from './constants';
 type ExpansionTypeProps =
     | {
           type: ExpansionType.Auto;
+          marginVertical?: number;
+          marginHorizontal?: number;
       }
     | {
           type: ExpansionType.Custom;

@@ -1,5 +1,8 @@
 import { TableBorders } from './TableBorders/TableBorders';
 
+import { TableResizer } from './TableResizer/TableResizer';
+import { ExpansionType } from './TableResizer/constants';
+
 // TODO
 
 type CellsOptions = {
@@ -9,7 +12,9 @@ type CellsOptions = {
 
 class TableSchema {
     protected content: string[][];
-    protected bordersStructure: Array<(colSizes: number[]) => string>[];
+    protected bordersStructure: Array<
+        (sizes: { height: number; cols: number[] }) => string
+    >[];
     protected cells: {
         cols: CellsOptions;
         rows: CellsOptions;
@@ -44,25 +49,41 @@ class TableSchema {
         this.cells.cols.count = 0;
 
         contentRows.forEach((row) => {
-            this.content.push([...row]);
-
             if (row.length > this.cells.cols.count) {
                 this.cells.cols.count = row.length;
             }
         });
 
+        for (let i = 0; i < this.cells.rows.count; i++) {
+            this.content[i] = [];
+
+            for (let j = 0; j < this.cells.cols.count; j++) {
+                this.content[i][j] = contentRows[i][j] || '';
+            }
+        }
+
         this.setCellsSize();
     }
 
     private setCellsSize() {
-        // TODO
-        for (let i = 0; i < this.cells.rows.count; i++) {
-            this.cells.rows.sizes[i] = 1;
-        }
+        const sizes = TableResizer.getCellsSizes({
+            type: ExpansionType.Custom,
+            content: this.content,
+            rowsSizes: [1, 1, 1],
+            columnsSizes: [1, 1],
+        });
 
-        for (let i = 0; i < this.cells.cols.count; i++) {
-            this.cells.cols.sizes[i] = 1;
-        }
+        this.cells.rows.sizes = sizes.rows;
+        this.cells.cols.sizes = sizes.cols;
+
+        // TODO
+        // for (let i = 0; i < this.cells.rows.count; i++) {
+        //     this.cells.rows.sizes[i] = 1;
+        // }
+
+        // for (let i = 0; i < this.cells.cols.count; i++) {
+        //     this.cells.cols.sizes[i] = 1;
+        // }
     }
 }
 

@@ -19,33 +19,39 @@ class Table extends TableSchema {
         const initPosY = this.positions.tableEnd.y - tableHeight + BORDER_SIZE;
         const initPosX = BORDER_SIZE;
 
-        ConsoleCanvas.cursorTo({
-            x: initPosX,
-            y: initPosY,
-        });
+        let posX = initPosX;
+        let posY = initPosY;
 
         this.content.forEach((rowContent, rowIndex) => {
+            posX = initPosX;
+
             rowContent.forEach((cellValue, colIndex) => {
-                ConsoleCanvas.print(String(cellValue));
-                ConsoleCanvas.moveTo({
-                    x: BORDER_SIZE + this.cells.cols.sizes[colIndex] - 1,
-                    y: 0,
+                cellValue.split('\n').forEach((cellValueRow, index) => {
+                    ConsoleCanvas.cursorTo({
+                        x: posX,
+                        y: posY + index,
+                    });
+
+                    ConsoleCanvas.print(cellValueRow);
                 });
+
+                posX += this.cells.cols.sizes[colIndex] + BORDER_SIZE;
             });
 
-            ConsoleCanvas.cursorTo({
-                x: initPosX,
-                y: initPosY + (BORDER_SIZE + 1) * (rowIndex + 1),
-            });
+            posY += this.cells.rows.sizes[rowIndex] + BORDER_SIZE;
         });
 
         ConsoleCanvas.cursorTo(this.positions.tableEnd);
     }
 
     private renderBorders() {
-        const output = this.bordersStructure.reduce((acc, rowConfig) => {
+        const output = this.bordersStructure.reduce((acc, rowConfig, index) => {
             rowConfig.forEach((rowPartial) => {
-                acc += rowPartial(this.cells.cols.sizes) + '\n';
+                acc +=
+                    rowPartial({
+                        height: this.cells.rows.sizes[index],
+                        cols: this.cells.cols.sizes,
+                    }) + '\n';
             });
 
             return acc;

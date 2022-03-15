@@ -3,7 +3,7 @@ import { ROW_TYPES } from './constants';
 
 class TableBorders extends BorderPartial {
     private static rowTypes: {
-        [key in ROW_TYPES]: Array<(colSizes: number[]) => string>;
+        [key in ROW_TYPES]: Array<(sizes: { height: number; cols: number[] }) => string>;
     } = {
         Header: [
             this.generateRowPartial.TopLine,
@@ -27,7 +27,7 @@ class TableBorders extends BorderPartial {
 
     public static getBordersStructure(
         rowsCount: number
-    ): Array<(colSizes: number[]) => string>[] {
+    ): Array<(sizes: { height: number; cols: number[] }) => string>[] {
         if (rowsCount === 1) {
             return [this.rowTypes.Single];
         }
