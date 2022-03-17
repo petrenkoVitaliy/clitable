@@ -1,55 +1,46 @@
 import { getCharsCount } from '../../../../utils/common';
 import { ExpansionType } from './constants';
-import { ExpansionTypeProps } from './types';
+import { ExpansionTypeProps, ResizeParams, CellsSizes } from './types';
 
 class TableResizer {
-    private static getEmptySizes(): {
-        rows: number[];
-        cols: number[];
-    } {
+    private static getEmptySizes(): CellsSizes {
         return {
             rows: [],
             cols: [],
         };
     }
 
-    // y: {
-    //     [key in ExpansionType]: (
-    //         params: Omit<ExpansionTypeProps, 'type'> & {
-    //             content: string[][];
-    //         }
-    //     ) => any;
-    // }
-
-    private static expansionTypeStrategy = {
+    private static expansionTypeStrategy: {
+        [key in ExpansionType]: (params: ResizeParams<key>) => CellsSizes;
+    } = {
         [ExpansionType.Auto]: (params: {
             type: ExpansionType.Auto;
-            // content: string[][];
+            content: string[][];
             marginVertical?: number;
             marginHorizontal?: number;
         }) => {
             const sizes = this.getEmptySizes();
-            // const { marginHorizontal = 0, marginVertical = 0 } = params;
+            const { marginHorizontal = 0, marginVertical = 0 } = params;
 
-            // for (let j = 0; j < params.content[0].length; j++) {
-            //     sizes.cols[j] = 0;
+            for (let j = 0; j < params.content[0].length; j++) {
+                sizes.cols[j] = 0;
 
-            //     for (let i = 0; i < params.content.length; i++) {
-            //         if (sizes.rows[i] === undefined) {
-            //             sizes.rows[i] = 0;
-            //         }
+                for (let i = 0; i < params.content.length; i++) {
+                    if (sizes.rows[i] === undefined) {
+                        sizes.rows[i] = 0;
+                    }
 
-            //         if (params.content[i][j].length > sizes.cols[j]) {
-            //             sizes.cols[j] = params.content[i][j].length + marginHorizontal;
-            //         }
+                    if (params.content[i][j].length > sizes.cols[j]) {
+                        sizes.cols[j] = params.content[i][j].length + marginHorizontal;
+                    }
 
-            //         // TODO '\n' to consts
-            //         const rowsInValue = getCharsCount(params.content[i][j], '\n') + 1;
-            //         if (rowsInValue > sizes.rows[i]) {
-            //             sizes.rows[i] = rowsInValue + marginVertical;
-            //         }
-            //     }
-            // }
+                    // TODO '\n' to consts
+                    const rowsInValue = getCharsCount(params.content[i][j], '\n') + 1;
+                    if (rowsInValue > sizes.rows[i]) {
+                        sizes.rows[i] = rowsInValue + marginVertical;
+                    }
+                }
+            }
 
             return sizes;
         },
@@ -95,24 +86,48 @@ class TableResizer {
 
         [ExpansionType.Responsive]: (params: {
             type: ExpansionType.Responsive;
-
             content: string[][];
             tableWidth: number;
             tableHeight: number;
         }) => {
-            const sizes = this.getEmptySizes();
-            // TODO
-            return sizes;
+            const autoSizes = this.expansionTypeStrategy[ExpansionType.Auto]({
+                type: ExpansionType.Auto,
+                content: params.content,
+            });
+
+            const colSizesSum = autoSizes.cols.reduce(
+                (acc, colSize) => (acc += colSize),
+                0
+            );
+            const rowSizesSum = autoSizes.rows.reduce(
+                (acc, rowSize) => (acc += rowSize),
+                0
+            );
+
+            const colMult = Math.floor(params.tableWidth / colSizesSum);
+            const rowMult = Math.floor(params.tableHeight / rowSizesSum);
+
+            return {
+                cols: autoSizes.cols.map((colSize) => colSize * colMult),
+                rows: autoSizes.rows.map((rowSize) => rowSize * rowMult),
+            };
         },
     };
 
-    public static getCellsSizes(
-        params: ExpansionTypeProps & {
-            content: string[][];
-        }
-    ) {
-        // TODO
-        return this.expansionTypeStrategy[params.type](params as any);
+    private static getExpansionTypeByStrategy<T extends keyof ExpansionTypeProps>(
+        params: ResizeParams<T>
+    ): CellsSizes {
+        const strategy = this.expansionTypeStrategy[
+            params.type
+        ] as typeof this.expansionTypeStrategy[T]; // ¯\_(ツ)_/¯
+
+        return strategy(params);
+    }
+
+    public static getCellsSizes<T extends keyof ExpansionTypeProps>(
+        params: ResizeParams<T>
+    ): CellsSizes {
+        return this.getExpansionTypeByStrategy<T>(params);
     }
 }
 

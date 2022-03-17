@@ -1,0 +1,3 @@
+class TableStylist {}
+
+export { TableStylist };

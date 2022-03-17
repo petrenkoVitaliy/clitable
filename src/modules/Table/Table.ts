@@ -9,6 +9,7 @@ class Table extends TableSchema {
     }
 
     private renderContent() {
+        // TODO move higher
         const tableHeight =
             BORDER_SIZE +
             this.cells.rows.sizes.reduce(

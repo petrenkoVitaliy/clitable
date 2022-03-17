@@ -3,8 +3,7 @@ import { TableBorders } from './TableBorders/TableBorders';
 import { TableResizer } from './TableResizer/TableResizer';
 import { ExpansionType } from './TableResizer/constants';
 
-// TODO
-
+// TODO I'm not sure about this
 type CellsOptions = {
     sizes: number[];
     count: number;
@@ -66,24 +65,16 @@ class TableSchema {
     }
 
     private setCellsSize() {
-        const sizes = TableResizer.getCellsSizes({
-            type: ExpansionType.Custom,
+        const type = ExpansionType.Auto;
+
+        const sizes = TableResizer.getCellsSizes<typeof type>({
+            type,
             content: this.content,
-            rowsSizes: [1, 1, 1],
-            columnsSizes: [1, 1],
+            marginHorizontal: 8,
         });
 
         this.cells.rows.sizes = sizes.rows;
         this.cells.cols.sizes = sizes.cols;
-
-        // TODO
-        // for (let i = 0; i < this.cells.rows.count; i++) {
-        //     this.cells.rows.sizes[i] = 1;
-        // }
-
-        // for (let i = 0; i < this.cells.cols.count; i++) {
-        //     this.cells.cols.sizes[i] = 1;
-        // }
     }
 }
 
