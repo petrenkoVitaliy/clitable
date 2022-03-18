@@ -1,5 +1,5 @@
 const getCharsCount = (str: string, char: string): number => {
-    return (str.match(/\n/g) || []).length;
+    return (str.match(new RegExp(char, 'g')) || []).length;
 };
 
 export { getCharsCount };

@@ -1,3 +1,0 @@
-class TableStylist {}
-
-export { TableStylist };

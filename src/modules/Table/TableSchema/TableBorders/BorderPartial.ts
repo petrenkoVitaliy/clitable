@@ -1,3 +1,4 @@
+import { END_LINE } from '../../constants';
 import { BORDERS } from './constants';
 import { RowPartial } from './types';
 
@@ -20,7 +21,7 @@ abstract class BorderPartial {
 
         let row = singleRow;
         for (let i = 1; i < height; i++) {
-            row += `\n${singleRow}`;
+            row += `${END_LINE}${singleRow}`;
         }
 
         return row;

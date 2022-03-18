@@ -34,7 +34,6 @@ class TableResizer {
                         sizes.cols[j] = params.content[i][j].length + marginHorizontal;
                     }
 
-                    // TODO '\n' to consts
                     const rowsInValue = getCharsCount(params.content[i][j], '\n') + 1;
                     if (rowsInValue > sizes.rows[i]) {
                         sizes.rows[i] = rowsInValue + marginVertical;
