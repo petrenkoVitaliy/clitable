@@ -23,7 +23,7 @@ class TableStylist {
             rightSpacesCount: number;
         };
     } = {
-        [CellCenteringType.CENTER]: (cellSize: number, cellValue: string) => {
+        [CellCenteringType.Center]: (cellSize: number, cellValue: string) => {
             const spacesCounts = this.getSpacesCounts();
             const spacesCount = cellSize - cellValue.length;
 
@@ -33,7 +33,7 @@ class TableStylist {
             return spacesCounts;
         },
 
-        [CellCenteringType.LEFT]: (cellSize: number, cellValue: string) => {
+        [CellCenteringType.Left]: (cellSize: number, cellValue: string) => {
             const spacesCounts = this.getSpacesCounts();
 
             spacesCounts.leftSpacesCount = 0;
@@ -42,7 +42,7 @@ class TableStylist {
             return spacesCounts;
         },
 
-        [CellCenteringType.RIGHT]: (cellSize: number, cellValue: string) => {
+        [CellCenteringType.Right]: (cellSize: number, cellValue: string) => {
             const spacesCounts = this.getSpacesCounts();
 
             spacesCounts.leftSpacesCount = cellSize - cellValue.length;
@@ -57,6 +57,10 @@ class TableStylist {
     }
 
     public styleCellValue(cellSize: number, cellValue: string) {
+        if (cellSize < cellValue.length) {
+            return cellValue.slice(0, cellSize);
+        }
+
         const { leftSpacesCount, rightSpacesCount } = this.cellCenteringStrategies[
             this.cellCentering
         ](cellSize, cellValue);

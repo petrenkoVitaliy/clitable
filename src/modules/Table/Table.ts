@@ -1,10 +1,10 @@
 import { TableSchema } from './TableSchema/TableSchema';
 import { TableRenderer } from './TableRenderer/TableRenderer';
 
-import { TableSchemaProps } from './TableSchema/types';
+import { TableSchemaProps, UpdateTableSchemaProps } from './TableSchema/types';
+import { RenderType } from './constants';
 
 class Table extends TableSchema {
-    // private tableSchema: TableSchema;
     private tableRenderer: TableRenderer;
 
     constructor(props: TableSchemaProps) {
@@ -13,14 +13,37 @@ class Table extends TableSchema {
         this.tableRenderer = new TableRenderer();
     }
 
-    public render() {
-        this.tableRenderer.render({
+    private getRenderParams() {
+        return {
             cellsSizes: this.cellsSizes,
             content: this.content,
             bordersStructure: this.bordersStructure,
             tableHeight: this.tableHeight,
             cellCenteringType: this.cellCenteringType,
-        });
+        };
+    }
+
+    public update(props: UpdateTableSchemaProps) {
+        const changedProps = this.updateProps(props);
+
+        switch (true) {
+            case changedProps.contentRows:
+            case changedProps.expansion:
+                this.render(RenderType.Full);
+
+                return;
+
+            case changedProps.cellCenteringType:
+                this.render(RenderType.Content);
+
+                return;
+        }
+    }
+
+    public render(renderType?: RenderType) {
+        const params = this.getRenderParams();
+
+        this.tableRenderer.render(renderType || RenderType.Full, params);
     }
 }
 

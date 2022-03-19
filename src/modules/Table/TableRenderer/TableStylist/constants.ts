@@ -1,8 +1,7 @@
-// TODO move? & case
 enum CellCenteringType {
-    CENTER = 'CENTER',
-    LEFT = 'LEFT',
-    RIGHT = 'RIGHT',
+    Center = 'Center',
+    Left = 'Left',
+    Right = 'Right',
 }
 
 export { CellCenteringType };

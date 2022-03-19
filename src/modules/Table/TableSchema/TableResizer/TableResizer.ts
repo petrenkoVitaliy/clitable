@@ -14,7 +14,7 @@ class TableResizer {
         [key in ExpansionType]: (params: ResizeParams<key>) => CellsSizes;
     } = {
         [ExpansionType.Auto]: (params: {
-            type: ExpansionType.Auto;
+            expansionType: ExpansionType.Auto;
             content: string[][];
             marginVertical?: number;
             marginHorizontal?: number;
@@ -45,7 +45,7 @@ class TableResizer {
         },
 
         [ExpansionType.Fixed]: (params: {
-            type: ExpansionType.Fixed;
+            expansionType: ExpansionType.Fixed;
             columnsSize: number;
             rowsSize: number;
             content: string[][];
@@ -64,12 +64,11 @@ class TableResizer {
         },
 
         [ExpansionType.Custom]: (params: {
-            type: ExpansionType.Custom;
+            expansionType: ExpansionType.Custom;
             columnsSizes: number[];
             rowsSizes?: number[];
             content: string[][];
         }) => {
-            // TODO validate length
             const sizes = this.getEmptySizes();
 
             for (let j = 0; j < params.content[0].length; j++) {
@@ -84,32 +83,50 @@ class TableResizer {
         },
 
         [ExpansionType.Responsive]: (params: {
-            type: ExpansionType.Responsive;
+            expansionType: ExpansionType.Responsive;
             content: string[][];
             tableWidth: number;
             tableHeight: number;
         }) => {
             const autoSizes = this.expansionTypeStrategy[ExpansionType.Auto]({
-                type: ExpansionType.Auto,
+                expansionType: ExpansionType.Auto,
                 content: params.content,
             });
 
-            const colSizesSum = autoSizes.cols.reduce(
-                (acc, colSize) => (acc += colSize),
-                0
-            );
-            const rowSizesSum = autoSizes.rows.reduce(
-                (acc, rowSize) => (acc += rowSize),
-                0
-            );
-
-            const colMult = Math.floor(params.tableWidth / colSizesSum);
-            const rowMult = Math.floor(params.tableHeight / rowSizesSum);
-
-            return {
-                cols: autoSizes.cols.map((colSize) => colSize * colMult),
-                rows: autoSizes.rows.map((rowSize) => rowSize * rowMult),
+            const sizesSum = {
+                cols: autoSizes.cols.reduce((acc, colSize) => (acc += colSize), 0),
+                rows: autoSizes.rows.reduce((acc, rowSize) => (acc += rowSize), 0),
             };
+
+            const multipliers = {
+                rows: (params.tableHeight - params.content.length - 1) / sizesSum.rows,
+                cols: (params.tableWidth - params.content[0].length - 1) / sizesSum.cols,
+            };
+
+            const lengths = {
+                cols: 0,
+                rows: 0,
+            };
+
+            const sizes = {
+                cols: autoSizes.cols.reduce((acc, colSize) => {
+                    acc.push(Math.round(colSize * multipliers.cols));
+                    lengths.cols += acc.at(-1) || 0;
+
+                    return acc;
+                }, [] as number[]),
+                rows: autoSizes.rows.reduce((acc, rowSize) => {
+                    acc.push(Math.round(rowSize * multipliers.rows));
+                    lengths.rows += acc.at(-1) || 0;
+
+                    return acc;
+                }, [] as number[]),
+            };
+
+            sizes.cols[0] += Math.abs(params.tableWidth - lengths.cols);
+            sizes.rows[0] += Math.abs(params.tableHeight - lengths.rows);
+
+            return sizes;
         },
     };
 
@@ -117,7 +134,7 @@ class TableResizer {
         params: ResizeParams<T>
     ): CellsSizes {
         const strategy = this.expansionTypeStrategy[
-            params.type
+            params.expansionType
         ] as typeof this.expansionTypeStrategy[T]; // ¯\_(ツ)_/¯
 
         return strategy(params);

@@ -3,13 +3,17 @@ import { TableResizer } from './TableResizer/TableResizer';
 
 import { ExpansionType } from './TableResizer/constants';
 import { BORDER_SIZE } from '../constants';
-import { TableSchemaProps } from './types';
+import { TableSchemaProps, UpdateTableSchemaProps } from './types';
 import { CellCenteringType } from '../TableRenderer/TableStylist/constants';
+import { ExpansionParams } from './TableResizer/types';
+import { Comparator } from './Comparator/Comparator';
 
 class TableSchema {
-    protected expansionType: ExpansionType = ExpansionType.Auto;
+    protected expansionParams: ExpansionParams = {
+        expansionType: ExpansionType.Auto,
+    };
 
-    protected cellCenteringType: CellCenteringType = CellCenteringType.CENTER;
+    protected cellCenteringType: CellCenteringType = CellCenteringType.Center;
 
     protected content: string[][] = [];
 
@@ -32,18 +36,37 @@ class TableSchema {
 
     protected tableHeight = 0;
 
+    private comparator: Comparator = new Comparator();
+
     constructor(props: TableSchemaProps) {
-        this.initTable(props.contentRows);
-
-        this.cellCenteringType = props.cellCenteringType;
-
-        // this.expansionType = props.expansionType || ExpansionType.Auto;
+        this.initTable(props);
     }
 
-    public initTable(contentRows: string[][] = []) {
-        this.parseContent(contentRows);
-        this.setCellsSize();
+    public initTable(props: UpdateTableSchemaProps) {
+        if (props.cellCenteringType) {
+            this.cellCenteringType = props.cellCenteringType;
+        }
 
+        if (props.expansion) {
+            this.expansionParams = props.expansion;
+        }
+
+        this.parseContent(props.contentRows || []);
+    }
+
+    public updateProps(props: UpdateTableSchemaProps) {
+        const changedProps = this.comparator.compareTableProps(props, {
+            contentRows: this.content,
+            cellCenteringType: this.cellCenteringType,
+            expansion: this.expansionParams,
+        });
+
+        this.initTable(props);
+
+        return changedProps;
+    }
+
+    private setBordersStructure() {
         this.bordersStructure = TableBorders.getBordersStructure(this.size.rows);
     }
 
@@ -57,6 +80,8 @@ class TableSchema {
             }
         });
 
+        this.content = [];
+
         for (let i = 0; i < this.size.rows; i++) {
             this.content[i] = [];
 
@@ -64,13 +89,15 @@ class TableSchema {
                 this.content[i][j] = contentRows[i][j] || '';
             }
         }
+
+        this.setCellsSize();
+        this.setBordersStructure();
     }
 
     private setCellsSize() {
         const sizes = TableResizer.getCellsSizes({
-            type: ExpansionType.Auto,
+            ...this.expansionParams,
             content: this.content,
-            marginHorizontal: 10,
         });
 
         this.cellsSizes = { ...sizes };
