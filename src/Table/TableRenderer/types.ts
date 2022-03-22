@@ -1,4 +1,4 @@
-import { CellCenteringType } from './TableStylist/constants';
+import { CellCenteringType } from '../../modules/CellStylist/constants';
 
 type RendererProps = {
     cellsSizes: {
@@ -6,7 +6,9 @@ type RendererProps = {
         cols: number[];
     };
     content: string[][];
-    bordersStructure: Array<(sizes: { height: number; cols: number[] }) => string>[];
+    bordersStructure: Array<
+        (sizes: { height: number; cols: number[]; maxAllowedLength?: number }) => string
+    >[];
     tableHeight: number;
     cellCenteringType: CellCenteringType;
 };

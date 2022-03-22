@@ -2,10 +2,18 @@
     "compilerOptions": {
         "target": "es2021",
         "module": "commonjs",
+        "exactOptionalPropertyTypes": true,
         "strict": true,
         "outDir": "dist",
         "noImplicitAny": true,
-        "sourceMap": true
+        "sourceMap": true,
+        "noImplicitOverride": true,
+        "noImplicitReturns": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "strictFunctionTypes": true,
+        "strictNullChecks": true
+        // "noUncheckedIndexedAccess": true
     },
     "include": ["src/**/*"],
     "exclude": ["node_modules"]

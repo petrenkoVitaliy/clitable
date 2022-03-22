@@ -1,12 +1,12 @@
-import { TableBorders } from './TableBorders/TableBorders';
-import { TableResizer } from './TableResizer/TableResizer';
+import { Comparator } from '../../modules/Comparator/Comparator';
+import { ExpansionType } from '../../modules/ExpansionManager/constants';
+import { BorderManager } from '../../modules/BorderManager/BorderManager';
+import { ExpansionParams } from '../../modules/ExpansionManager/types';
+import { ExpansionManager } from '../../modules/ExpansionManager/ExpansionManager';
+import { CellCenteringType } from '../../modules/CellStylist/constants';
 
-import { ExpansionType } from './TableResizer/constants';
 import { BORDER_SIZE } from '../constants';
 import { TableSchemaProps, UpdateTableSchemaProps } from './types';
-import { CellCenteringType } from '../TableRenderer/TableStylist/constants';
-import { ExpansionParams } from './TableResizer/types';
-import { Comparator } from './Comparator/Comparator';
 
 class TableSchema {
     protected expansionParams: ExpansionParams = {
@@ -18,7 +18,7 @@ class TableSchema {
     protected content: string[][] = [];
 
     protected bordersStructure: Array<
-        (sizes: { height: number; cols: number[] }) => string
+        (sizes: { height: number; cols: number[]; maxAllowedLength?: number }) => string
     >[] = [];
 
     protected cellsSizes: {
@@ -67,7 +67,7 @@ class TableSchema {
     }
 
     private setBordersStructure() {
-        this.bordersStructure = TableBorders.getBordersStructure(this.size.rows);
+        this.bordersStructure = BorderManager.getBordersStructure(this.size.rows);
     }
 
     private parseContent(contentRows: string[][]) {
@@ -80,13 +80,13 @@ class TableSchema {
             }
         });
 
-        this.content = [];
+        this.content = [[]];
 
         for (let i = 0; i < this.size.rows; i++) {
             this.content[i] = [];
 
             for (let j = 0; j < this.size.cols; j++) {
-                this.content[i][j] = contentRows[i][j] || '';
+                this.content[i]![j] = contentRows?.[i]?.[j] || '';
             }
         }
 
@@ -95,7 +95,8 @@ class TableSchema {
     }
 
     private setCellsSize() {
-        const sizes = TableResizer.getCellsSizes({
+        // TODO move to prop
+        const sizes = ExpansionManager.getCellsSizes({
             ...this.expansionParams,
             content: this.content,
         });

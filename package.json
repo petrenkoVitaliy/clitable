@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "main": "index.js",
     "scripts": {
-        "dev": "nodemon --watch src/** --ext ts,json --exec \"npm run dev:build\"",
+        "dev": "nodemon --watch src --ext ts,json --exec \"npm run dev:build\"",
         "dev:build": "node --inspect --require ts-node/register src/index.ts",
         "dev:brk": "nodemon --watch src/** --ext ts,json --exec \"npm run dev:build:brk\"",
         "dev:build:brk": "node --inspect-brk --require ts-node/register src/index.ts",

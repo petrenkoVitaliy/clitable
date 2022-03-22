@@ -1,12 +1,8 @@
-import { CellCenteringType } from '../../TableRenderer/TableStylist/constants';
-import { ExpansionParams } from '../TableResizer/types';
-import { UpdateTableSchemaProps } from '../types';
+import { CellCenteringType } from '../CellStylist/constants';
+import { ExpansionParams } from '../ExpansionManager/types';
+import { UpdateTableSchemaProps } from '../../Table/TableSchema/types';
 
-type ComparisonResult = {
-    cellCenteringType: boolean;
-    expansion: boolean;
-    contentRows: boolean;
-};
+import { ComparisonResult } from './types';
 
 class Comparator {
     public compareTableProps(

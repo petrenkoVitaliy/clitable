@@ -1,26 +1,33 @@
-import { ConsoleCanvas } from './ConsoleCanvas/ConsoleCanvas';
+import { ConsoleCanvas } from '../../modules/TerminalCanvas/TerminalCanvas';
+import { CellStylist } from '../../modules/CellStylist/CellStylist';
+import { getCharsCount } from '../../utils/common';
 import { BORDER_SIZE, END_LINE, RenderType } from '../constants';
 
-import { TableStylist } from './TableStylist/TableStylist';
-
 import { RendererProps } from './types';
-import { getCharsCount } from '../../../utils/common';
 
 class TableRenderer {
+    private isCropping = true;
+
     private isRendered = false;
-
-    private positions = {
-        tableEnd: { x: 0, y: 0 },
-    };
-
     private renderedHeight = 0;
+
+    private terminalSize: { cols: number; rows: number };
+
+    constructor() {
+        this.terminalSize = { ...ConsoleCanvas.getTerminalSize() };
+
+        ConsoleCanvas.addResizeListener(this.terminalResizeHandler);
+    }
+
+    private terminalResizeHandler() {
+        this.terminalSize = { ...ConsoleCanvas.getTerminalSize() };
+    }
 
     private renderBorders(params: RendererProps) {
         if (this.isRendered) {
-            const terminalWidth = ConsoleCanvas.getTerminalWidth();
+            const eraseLine = ' '.repeat(this.terminalSize.cols);
 
-            const eraseLine = ' '.repeat(terminalWidth);
-
+            // TODO move to ConsoleCanvas -> TerminalCanvas
             process.stdout.cursorTo(0);
             process.stdout.moveCursor(0, -this.renderedHeight);
 
@@ -32,12 +39,15 @@ class TableRenderer {
             process.stdout.moveCursor(0, -this.renderedHeight + BORDER_SIZE);
         }
 
-        const output = params.bordersStructure.reduce((acc, rowConfig, index) => {
-            rowConfig.forEach((rowPartial) => {
+        const output = params.bordersStructure.reduce((acc, borderRowConfig, index) => {
+            borderRowConfig.forEach((borderPartial) => {
                 acc +=
-                    rowPartial({
+                    borderPartial({
                         height: params.cellsSizes.rows[index],
                         cols: params.cellsSizes.cols,
+                        ...(this.isCropping
+                            ? { maxAllowedLength: this.terminalSize.cols }
+                            : null),
                     }) + END_LINE;
             });
 
@@ -47,13 +57,11 @@ class TableRenderer {
         this.renderedHeight = getCharsCount(output, END_LINE);
 
         ConsoleCanvas.print(output);
-
-        this.positions.tableEnd = ConsoleCanvas.getCursorPosition();
     }
 
-    public renderContent(params: RendererProps) {
-        // TODO
-        const stylist = new TableStylist({
+    private renderContent(params: RendererProps) {
+        // TODO move to prop WIP
+        const stylist = new CellStylist({
             cellCentering: params.cellCenteringType,
         });
 
@@ -61,30 +69,39 @@ class TableRenderer {
         process.stdout.moveCursor(0, -this.renderedHeight + BORDER_SIZE);
 
         params.content.forEach((rowContent, rowIndex) => {
+            let cursorXPosition = BORDER_SIZE;
             process.stdout.cursorTo(BORDER_SIZE);
 
             rowContent.forEach((cellValue, colIndex) => {
                 const cellRows = cellValue.split(END_LINE);
 
-                cellRows.forEach((cellValueRow, index) => {
+                cellRows.forEach((cellValue, index) => {
                     if (index) {
                         process.stdout.moveCursor(
                             -params.cellsSizes.cols[colIndex],
                             index
                         );
                     } else {
+                        // Not needed?
                         process.stdout.moveCursor(0, index);
                     }
 
-                    const value = stylist.styleCellValue(
-                        params.cellsSizes.cols[colIndex],
-                        cellValueRow
-                    );
+                    const value = stylist.styleCellValue({
+                        cellSize: params.cellsSizes.cols[colIndex],
+                        cellValue,
+                        ...(this.isCropping
+                            ? {
+                                  maxAllowedLength:
+                                      this.terminalSize.cols - cursorXPosition,
+                              }
+                            : null),
+                    });
 
                     ConsoleCanvas.print(value);
                 });
 
-                process.stdout.moveCursor(BORDER_SIZE, -cellRows.length + 1);
+                cursorXPosition += params.cellsSizes.cols[colIndex] + BORDER_SIZE;
+                process.stdout.moveCursor(BORDER_SIZE, -cellRows.length + BORDER_SIZE);
             });
 
             process.stdout.cursorTo(BORDER_SIZE);
@@ -93,13 +110,13 @@ class TableRenderer {
     }
 
     public render(renderType: RenderType, params: RendererProps) {
-        // ConsoleCanvas.hideCursor();
+        ConsoleCanvas.hideCursor();
 
         if (!this.isRendered) {
             ConsoleCanvas.print(END_LINE);
         }
 
-        if (renderType == RenderType.Full) {
+        if (renderType === RenderType.Full) {
             this.renderBorders(params);
         }
 

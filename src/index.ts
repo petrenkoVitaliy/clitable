@@ -7,26 +7,20 @@
 
 // process.stdin.resume();
 
-import { Table } from './modules/Table/Table';
-import { CellCenteringType } from './modules/Table/TableRenderer/TableStylist/constants';
-import { ExpansionType } from './modules/Table/TableSchema/TableResizer/constants';
+import { Table } from './Table/Table';
+import { CellCenteringType } from './modules/CellStylist/constants';
+import { ExpansionType } from './modules/ExpansionManager/constants';
 
 const sleep = async (delayMs: number) => new Promise((r) => setTimeout(r, delayMs));
 
 const table = new Table({
     expansion: {
         expansionType: ExpansionType.Auto,
-        marginHorizontal: 5,
-        // columnsSizes: [30, 30, 30],
     },
 
     cellCenteringType: CellCenteringType.Center,
 
-    contentRows: [
-        ['aa\na', 'x\nx', 'xxxx'],
-        ['a', 'a', 'bbb', 'a'],
-        ['a', 'a', 'ccc', 'aaaaaaaaaaaa'],
-    ],
+    contentRows: [],
 });
 
 const LOREM_IPSUM = [
@@ -40,28 +34,30 @@ const LOREM_IPSUM = [
     'ea commodo consequat.',
 ];
 
-process.stdout.on('resize', () => {
-    console.log('screen size has changed!');
-});
-
 const main = async () => {
     table.render();
-    await sleep(1500);
-
-    for (let i = 0; i < 100; i++) {
-        await sleep(500);
+    // await sleep(1500);
+    let i = 0;
+    while (1) {
+        await sleep(200);
         table.update({
+            expansion: {
+                expansionType: ExpansionType.Responsive,
+                tableWidth: 100,
+            },
             cellCenteringType: CellCenteringType.Center,
 
             contentRows: [
                 [
-                    LOREM_IPSUM[i % LOREM_IPSUM.length],
+                    LOREM_IPSUM[i % LOREM_IPSUM.length] || '',
                     'bbbbbbbbbbbbbbbbbbbbbbbbbbbb',
                     String(i),
                 ],
-                [String(i), String(i), LOREM_IPSUM[i % LOREM_IPSUM.length]],
+                [String(i), String(i), LOREM_IPSUM[i % LOREM_IPSUM.length] || ''],
             ],
         });
+
+        i++;
     }
 };
 

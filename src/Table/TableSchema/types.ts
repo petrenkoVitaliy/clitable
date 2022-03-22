@@ -1,5 +1,5 @@
-import { CellCenteringType } from '../TableRenderer/TableStylist/constants';
-import { ExpansionParams } from './TableResizer/types';
+import { CellCenteringType } from '../../modules/CellStylist/constants';
+import { ExpansionParams } from '../../modules/ExpansionManager/types';
 
 type TableSchemaProps = {
     contentRows: string[][];

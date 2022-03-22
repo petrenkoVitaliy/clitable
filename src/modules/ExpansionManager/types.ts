@@ -4,7 +4,7 @@ type ExpansionTypeProps = {
     [ExpansionType.Responsive]: {
         expansionType: ExpansionType.Responsive;
         tableWidth: number;
-        tableHeight: number;
+        tableHeight?: number;
     };
     [ExpansionType.Auto]: {
         expansionType: ExpansionType.Auto;
@@ -23,13 +23,14 @@ type ExpansionTypeProps = {
     };
 };
 
-type FullExpansionTypeProps = Omit<
-    ExpansionTypeProps[ExpansionType.Auto],
-    'expansionType'
-> &
-    Omit<ExpansionTypeProps[ExpansionType.Responsive], 'expansionType'> &
-    Omit<ExpansionTypeProps[ExpansionType.Custom], 'expansionType'> &
-    Omit<ExpansionTypeProps[ExpansionType.Fixed], 'expansionType'>;
+// TODO unused
+// type FullExpansionTypeProps = Omit<
+//     ExpansionTypeProps[ExpansionType.Auto],
+//     'expansionType'
+// > &
+//     Omit<ExpansionTypeProps[ExpansionType.Responsive], 'expansionType'> &
+//     Omit<ExpansionTypeProps[ExpansionType.Custom], 'expansionType'> &
+//     Omit<ExpansionTypeProps[ExpansionType.Fixed], 'expansionType'>;
 
 type ExpansionParams<T extends keyof ExpansionTypeProps = keyof ExpansionTypeProps> =
     ExpansionTypeProps[T];
@@ -43,10 +44,4 @@ type CellsSizes = {
     cols: number[];
 };
 
-export {
-    ExpansionTypeProps,
-    ResizeParams,
-    CellsSizes,
-    ExpansionParams,
-    FullExpansionTypeProps,
-};
+export { ExpansionTypeProps, ResizeParams, CellsSizes, ExpansionParams };

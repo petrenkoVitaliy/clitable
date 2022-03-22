@@ -5,12 +5,10 @@ import { TableSchemaProps, UpdateTableSchemaProps } from './TableSchema/types';
 import { RenderType } from './constants';
 
 class Table extends TableSchema {
-    private tableRenderer: TableRenderer;
+    private tableRenderer = new TableRenderer();
 
     constructor(props: TableSchemaProps) {
         super(props);
-
-        this.tableRenderer = new TableRenderer();
     }
 
     private getRenderParams() {

@@ -1,8 +1,9 @@
-import { getCharsCount } from '../../../../utils/common';
+import { getCharsCount } from '../../utils/common';
+
 import { ExpansionType } from './constants';
 import { ExpansionTypeProps, ResizeParams, CellsSizes } from './types';
 
-class TableResizer {
+class ExpansionManager {
     private static getEmptySizes(): CellsSizes {
         return {
             rows: [],
@@ -86,7 +87,7 @@ class TableResizer {
             expansionType: ExpansionType.Responsive;
             content: string[][];
             tableWidth: number;
-            tableHeight: number;
+            tableHeight?: number;
         }) => {
             const autoSizes = this.expansionTypeStrategy[ExpansionType.Auto]({
                 expansionType: ExpansionType.Auto,
@@ -97,6 +98,10 @@ class TableResizer {
                 cols: autoSizes.cols.reduce((acc, colSize) => (acc += colSize), 0),
                 rows: autoSizes.rows.reduce((acc, rowSize) => (acc += rowSize), 0),
             };
+
+            if (!params.tableHeight) {
+                params.tableHeight = sizesSum.rows + params.content.length + 1;
+            }
 
             const multipliers = {
                 rows: (params.tableHeight - params.content.length - 1) / sizesSum.rows,
@@ -147,4 +152,4 @@ class TableResizer {
     }
 }
 
-export { TableResizer };
+export { ExpansionManager };
