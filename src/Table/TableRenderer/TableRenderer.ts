@@ -1,5 +1,6 @@
 import { TerminalCanvas } from '../../modules/TerminalCanvas/TerminalCanvas';
 import { BORDER_SIZE, END_LINE } from '../constants';
+import { VirtualTableDiff } from '../TableVirtualizer/types';
 
 class TableRenderer {
     private isRendered = false;
@@ -10,7 +11,7 @@ class TableRenderer {
 
         TerminalCanvas.moveToRow(0, -this.renderedHeight);
         for (let i = 0; i < this.renderedHeight; i++) {
-            process.stdout.clearLine(0);
+            TerminalCanvas.clearLine(0);
             TerminalCanvas.moveToRow(0, 1);
         }
 
@@ -26,21 +27,66 @@ class TableRenderer {
         }
 
         const output = virtualTable.reduce(
-            (acc, tableRow) => (acc += tableRow + END_LINE)
+            (acc, tableRow) => (acc += tableRow + END_LINE),
+            ''
         );
 
         this.renderedHeight = virtualTable.length;
         TerminalCanvas.print(output);
     }
 
-    public render(virtualTable: string[]) {
+    private updateTable(virtualTableDiff: VirtualTableDiff) {
+        if (this.isRendered) {
+            TerminalCanvas.moveToRow(0, -this.renderedHeight);
+        }
+
+        this.renderedHeight = 0;
+
+        for (let i = 0; i < virtualTableDiff.length; i++) {
+            const colDiff = virtualTableDiff[i];
+
+            if (colDiff) {
+                // TODO - 3 - optimize
+                Object.keys(virtualTableDiff[i] || {}).forEach((_colIndex) => {
+                    const colIndex = Number(_colIndex);
+
+                    TerminalCanvas.cursorTo(Number(colIndex));
+                    TerminalCanvas.print(colDiff[colIndex]);
+                });
+
+                TerminalCanvas.print(END_LINE);
+            }
+            if (colDiff === null) {
+                TerminalCanvas.clearLine(0);
+                TerminalCanvas.moveToRow(0, 1);
+            }
+            if (colDiff === undefined) {
+                TerminalCanvas.moveToRow(0, 1);
+            }
+
+            this.renderedHeight++;
+        }
+    }
+
+    public render(
+        params: {
+            virtualTable: string[];
+            virtualTableDiff: VirtualTableDiff;
+        },
+        options?: { forceRerender?: boolean }
+    ) {
         TerminalCanvas.hideCursor();
 
         if (!this.isRendered) {
             TerminalCanvas.print(END_LINE);
         }
 
-        this.renderTable(virtualTable);
+        if (options?.forceRerender || !this.isRendered) {
+            this.renderTable(params.virtualTable);
+        } else {
+            this.updateTable(params.virtualTableDiff);
+        }
+
         this.isRendered = true;
 
         TerminalCanvas.showCursor();

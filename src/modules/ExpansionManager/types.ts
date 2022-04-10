@@ -1,3 +1,4 @@
+import { TerminalSize } from '../../Table/TableSchema/types';
 import { ExpansionType } from './constants';
 
 type RelativeMeasure<
@@ -5,9 +6,9 @@ type RelativeMeasure<
     TValue extends number = number
 > = `${TValue}${TMeasure}`;
 
-type PercentMeasure = RelativeMeasure<'%'>;
+export type PercentMeasure = RelativeMeasure<'%'>;
 
-type ExpansionTypeProps = {
+export type ExpansionTypeProps = {
     [ExpansionType.Responsive]: {
         expansionType: ExpansionType.Responsive;
         tableWidth: number | PercentMeasure;
@@ -30,17 +31,11 @@ type ExpansionTypeProps = {
     };
 };
 
-type ExpansionParams<T extends keyof ExpansionTypeProps = keyof ExpansionTypeProps> =
-    ExpansionTypeProps[T];
+export type ExpansionParams<
+    T extends keyof ExpansionTypeProps = keyof ExpansionTypeProps
+> = ExpansionTypeProps[T];
 
-type ResizeParams<T extends keyof ExpansionTypeProps> = ExpansionParams<T> & {
+export type ResizeParams<T extends keyof ExpansionTypeProps> = ExpansionParams<T> & {
     content: string[][];
-    terminalSize: { cols: number; rows: number };
+    terminalSize: TerminalSize;
 };
-
-type CellsSizes = {
-    rows: number[];
-    cols: number[];
-};
-
-export { ExpansionTypeProps, ResizeParams, CellsSizes, ExpansionParams, PercentMeasure };

@@ -1,16 +1,17 @@
 import { CellCenteringType } from '../../modules/CellStylist/constants';
 import { ExpansionParams } from '../../modules/ExpansionManager/types';
 
-type TableSchemaProps = {
-    contentRows: string[][];
-    cellCenteringType: CellCenteringType;
-    expansion: ExpansionParams;
-};
-
-type UpdateTableSchemaProps = {
+export type TableSchemaProps = {
     contentRows?: string[][];
     cellCenteringType?: CellCenteringType;
     expansion?: ExpansionParams;
+    forceRerender?: boolean;
+    rerenderOnResize?: boolean;
 };
 
-export { TableSchemaProps, UpdateTableSchemaProps };
+export type CellsSizes = {
+    cols: number[];
+    rows: number[];
+};
+
+export type TerminalSize = { cols: number; rows: number };

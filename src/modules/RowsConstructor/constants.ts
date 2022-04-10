@@ -1,4 +1,4 @@
-const BORDERS = {
+export const BORDERS = {
     horizontal: '─',
     vertical: '│',
 
@@ -15,11 +15,9 @@ const BORDERS = {
     bottomLeft: '└',
 };
 
-enum ROW_TYPES {
+export enum ROW_TYPES {
     Header = 'Header',
     Footer = 'Footer',
     Body = 'Body',
     Single = 'Single',
 }
-
-export { BORDERS, ROW_TYPES };

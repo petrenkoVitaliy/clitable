@@ -1,8 +1,3 @@
-// TODO rm
-/* import * as ansiEscapes from 'sisteransi'; */
-
-import { getConsoleCursorPosition } from '../../utils/screenBuffer';
-
 const ESC = '\u001B[';
 
 class TerminalCanvas {
@@ -29,10 +24,6 @@ class TerminalCanvas {
         process.stdout.on('resize', callback);
     }
 
-    public static getCursorPosition() {
-        return getConsoleCursorPosition();
-    }
-
     public static hideCursor() {
         this.print(`${ESC}?25l`);
     }
@@ -41,10 +32,12 @@ class TerminalCanvas {
         this.print(`${ESC}?25h`);
     }
 
-    public static moveCursor(x: number, y: number) {
-        process.stdout.moveCursor(x, y);
+    // relative
+    private static moveCursor(x: number, y?: number) {
+        process.stdout.moveCursor(x, y || 0);
     }
 
+    // absolute
     public static cursorTo(x: number, y?: number) {
         process.stdout.cursorTo(x, y);
     }
@@ -52,6 +45,10 @@ class TerminalCanvas {
     public static moveToRow(absoluteX: number, relativeY: number) {
         this.cursorTo(absoluteX);
         this.moveCursor(0, relativeY);
+    }
+
+    public static clearLine(dir: -1 | 0 | 1) {
+        process.stdout.clearLine(dir);
     }
 }
 

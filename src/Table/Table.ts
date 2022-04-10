@@ -1,7 +1,7 @@
 import { TableSchema } from './TableSchema/TableSchema';
 import { TableRenderer } from './TableRenderer/TableRenderer';
 
-import { TableSchemaProps, UpdateTableSchemaProps } from './TableSchema/types';
+import { TableSchemaProps } from './TableSchema/types';
 import { TerminalCanvas } from '../modules/TerminalCanvas/TerminalCanvas';
 import { debounce } from '../utils/common';
 import { TableVirtualizer } from './TableVirtualizer/TableVirtualizer';
@@ -22,7 +22,7 @@ class Table extends TableSchema {
         this.tableRenderer.clearTable();
     }
 
-    public render(props?: UpdateTableSchemaProps) {
+    public render(props?: TableSchemaProps) {
         // TerminalCanvas.save();
 
         if (props) {
@@ -30,9 +30,11 @@ class Table extends TableSchema {
         }
 
         const params = this.getRenderParams();
-        const virtualTable = this.tableVirtualizer.updateVirtualTable(params);
+        const virtualParams = this.tableVirtualizer.updateVirtualTable(params);
 
-        this.tableRenderer.render(virtualTable);
+        this.tableRenderer.render(virtualParams, {
+            forceRerender: !!props?.forceRerender,
+        });
 
         // TerminalCanvas.restore();
     }
@@ -41,10 +43,11 @@ class Table extends TableSchema {
         const updateTable = debounce(this.render.bind(this), DEBOUNCE_DELAY);
 
         TerminalCanvas.addResizeListener(() => {
-            // TODO add boolean flag here
-            this.tableRenderer.clearTable();
+            if (this.rerenderOnResize) {
+                this.tableRenderer.clearTable();
+            }
 
-            updateTable();
+            updateTable({ forceRerender: true });
         });
     }
 }

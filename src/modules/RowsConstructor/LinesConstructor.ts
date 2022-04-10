@@ -2,28 +2,29 @@ import { END_LINE } from '../../Table/constants';
 import { cropToLength } from '../../utils/common';
 
 import { BORDERS } from './constants';
-import { RowPartial, RowPartialGenerationProps } from './types';
+import { LinePartial, LinePartialGenerationProps } from './types';
 
-// TODO not partial anymore
-abstract class BorderPartial {
+abstract class LinesConstructor {
     private static constructLine = (params: {
-        rowParts: (string | RowPartial)[];
+        lineParts: (string | LinePartial)[];
         maxAllowedLength?: number | undefined;
     }) => {
-        let singleRow = params.rowParts
-            .map((rowPart) =>
-                typeof rowPart === 'string'
-                    ? rowPart
-                    : Array.from(Array(rowPart.colSizes.length))
+        let singleRow = params.lineParts
+            .map((linePart) =>
+                typeof linePart === 'string'
+                    ? linePart
+                    : Array.from(Array(linePart.colSizes.length))
                           .map((_, index) => {
-                              return rowPart.values && rowPart.values[index]
+                              return linePart.values && linePart.values[index]
                                   ? cropToLength(
-                                        rowPart.values[index],
-                                        rowPart.colSizes[index]
+                                        linePart.values[index],
+                                        linePart.colSizes[index]
                                     )
-                                  : rowPart.partial.repeat(rowPart.colSizes[index] || 1);
+                                  : linePart.partial.repeat(
+                                        linePart.colSizes[index] || 1
+                                    );
                           })
-                          .join(rowPart.separatedBy)
+                          .join(linePart.separatedBy)
             )
             .join('');
 
@@ -31,7 +32,7 @@ abstract class BorderPartial {
             singleRow = singleRow.slice(0, params.maxAllowedLength);
         }
 
-        // TODO no!
+        // TODO - 1 - handle multiline content
         let row = singleRow;
         for (let i = 1; i < 1; i++) {
             row += `${END_LINE}${singleRow}`;
@@ -40,10 +41,10 @@ abstract class BorderPartial {
         return row;
     };
 
-    protected static generateRowPartial = {
-        TopLine: (params: RowPartialGenerationProps) =>
+    protected static generateLine = {
+        TopLine: (params: LinePartialGenerationProps) =>
             this.constructLine({
-                rowParts: [
+                lineParts: [
                     BORDERS.topLeft,
                     {
                         separatedBy: BORDERS.topCenter,
@@ -55,9 +56,9 @@ abstract class BorderPartial {
                 maxAllowedLength: params.maxAllowedLength,
             }),
 
-        ContentLine: (params: RowPartialGenerationProps) =>
+        ContentLine: (params: LinePartialGenerationProps) =>
             this.constructLine({
-                rowParts: [
+                lineParts: [
                     BORDERS.vertical,
                     {
                         separatedBy: BORDERS.vertical,
@@ -70,9 +71,9 @@ abstract class BorderPartial {
                 maxAllowedLength: params.maxAllowedLength,
             }),
 
-        BottomLine: (params: RowPartialGenerationProps) =>
+        BottomLine: (params: LinePartialGenerationProps) =>
             this.constructLine({
-                rowParts: [
+                lineParts: [
                     BORDERS.bottomLeft,
                     {
                         separatedBy: BORDERS.bottomCenter,
@@ -84,9 +85,9 @@ abstract class BorderPartial {
                 maxAllowedLength: params.maxAllowedLength,
             }),
 
-        SeparatorLine: (params: RowPartialGenerationProps) =>
+        SeparatorLine: (params: LinePartialGenerationProps) =>
             this.constructLine({
-                rowParts: [
+                lineParts: [
                     BORDERS.middleLeft,
                     {
                         separatedBy: BORDERS.middleCenter,
@@ -100,4 +101,4 @@ abstract class BorderPartial {
     };
 }
 
-export { BorderPartial };
+export { LinesConstructor };

@@ -1,7 +1,9 @@
-import { getCharsCount, getMeasuresSum, parseMeasure } from '../../utils/common';
+import { CellsSizes, TerminalSize } from '../../Table/TableSchema/types';
+import { getCharsCount } from '../../utils/common';
+import { getMeasuresSum, parseMeasure } from '../../utils/measure';
 
 import { ExpansionType } from './constants';
-import { ExpansionTypeProps, ResizeParams, CellsSizes, PercentMeasure } from './types';
+import { ExpansionTypeProps, ResizeParams, PercentMeasure } from './types';
 
 class ExpansionManager {
     private static getEmptySizes(): CellsSizes {
@@ -69,7 +71,7 @@ class ExpansionManager {
             columnsSizes: (number | PercentMeasure)[];
             rowsSizes?: number[];
             content: string[][];
-            terminalSize: { cols: number; rows: number };
+            terminalSize: TerminalSize;
         }) => {
             const { rowsSizes, content, terminalSize } = params;
             const qualitativeColsSize = terminalSize.cols - content[0].length - 1;
@@ -108,7 +110,7 @@ class ExpansionManager {
         [ExpansionType.Responsive]: (params: {
             expansionType: ExpansionType.Responsive;
             content: string[][];
-            terminalSize: { cols: number; rows: number };
+            terminalSize: TerminalSize;
             tableWidth: number | PercentMeasure;
             tableHeight?: number;
         }) => {

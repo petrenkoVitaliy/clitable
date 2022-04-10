@@ -1,51 +1,63 @@
 import { ExpansionType } from '../../modules/ExpansionManager/constants';
-import { BorderManager } from '../../modules/BorderManager/BorderManager';
+import { RowsConstructor } from '../../modules/RowsConstructor/RowsConstructor';
 import { ExpansionParams } from '../../modules/ExpansionManager/types';
 import { ExpansionManager } from '../../modules/ExpansionManager/ExpansionManager';
 import { CellCenteringType } from '../../modules/CellStylist/constants';
 
 import { BORDER_SIZE } from '../constants';
-import { TableSchemaProps, UpdateTableSchemaProps } from './types';
+import { CellsSizes, TableSchemaProps } from './types';
 import { TerminalCanvas } from '../../modules/TerminalCanvas/TerminalCanvas';
-import { BordersStructure } from '../../modules/BorderManager/types';
+import { RowsStructure } from '../../modules/RowsConstructor/types';
 
 class TableSchema {
+    protected content: string[][] = [];
+    protected rowsStructure: RowsStructure = [];
+    protected cellCenteringType: CellCenteringType = CellCenteringType.Center;
+    protected terminalSize = { ...TerminalCanvas.getTerminalSize() };
+    protected tableHeight: number = 0;
+    protected rerenderOnResize: boolean = true;
     protected expansionParams: ExpansionParams = {
         expansionType: ExpansionType.Auto,
     };
-
-    protected cellCenteringType: CellCenteringType = CellCenteringType.Center;
-
-    protected content: string[][] = [];
-
-    protected bordersStructure: BordersStructure = [];
-
-    protected cellsSizes: {
-        cols: number[];
-        rows: number[];
-    } = {
+    protected cellsSizes: CellsSizes = {
         cols: [],
         rows: [],
     };
-
-    protected size = {
+    protected tableSize = {
         rows: 0,
         cols: 0,
     };
 
-    protected terminalSize = { ...TerminalCanvas.getTerminalSize() };
-
-    protected tableHeight = 0;
-
     constructor(props: TableSchemaProps) {
-        this.initTable(props);
+        this.parseTableProps(props);
     }
 
-    public initTable(props: UpdateTableSchemaProps) {
+    protected updateProps(props: TableSchemaProps) {
+        this.parseTableProps(props);
+
+        return this.getRenderParams();
+    }
+
+    protected getRenderParams() {
+        return {
+            cellsSizes: this.cellsSizes,
+            content: this.content,
+            rowsStructure: this.rowsStructure,
+            tableHeight: this.tableHeight,
+            cellCenteringType: this.cellCenteringType,
+            terminalSize: this.terminalSize,
+        };
+    }
+
+    private parseTableProps(props: TableSchemaProps) {
         const terminalSize = { ...TerminalCanvas.getTerminalSize() };
 
         if (props.cellCenteringType) {
             this.cellCenteringType = props.cellCenteringType;
+        }
+
+        if (props.rerenderOnResize !== undefined) {
+            this.rerenderOnResize = props.rerenderOnResize;
         }
 
         if (props.expansion) {
@@ -67,49 +79,32 @@ class TableSchema {
         }
     }
 
-    public updateProps(props: UpdateTableSchemaProps) {
-        this.initTable(props);
-
-        return this.getRenderParams();
-    }
-
-    protected getRenderParams() {
-        return {
-            cellsSizes: this.cellsSizes,
-            content: this.content,
-            bordersStructure: this.bordersStructure,
-            tableHeight: this.tableHeight,
-            cellCenteringType: this.cellCenteringType,
-            terminalSize: this.terminalSize,
-        };
-    }
-
-    private setBordersStructure() {
-        this.bordersStructure = BorderManager.getBordersStructure(this.size.rows);
+    private setRowsStructure() {
+        this.rowsStructure = RowsConstructor.getRowsStructure(this.tableSize.rows);
     }
 
     private parseContent(contentRows: string[][]) {
-        this.size.rows = contentRows.length;
-        this.size.cols = 0;
+        this.tableSize.rows = contentRows.length;
+        this.tableSize.cols = 0;
 
         contentRows.forEach((row) => {
-            if (row.length > this.size.cols) {
-                this.size.cols = row.length;
+            if (row.length > this.tableSize.cols) {
+                this.tableSize.cols = row.length;
             }
         });
 
         this.content = [[]];
 
-        for (let i = 0; i < this.size.rows; i++) {
+        for (let i = 0; i < this.tableSize.rows; i++) {
             this.content[i] = [];
 
-            for (let j = 0; j < this.size.cols; j++) {
+            for (let j = 0; j < this.tableSize.cols; j++) {
                 this.content[i]![j] = contentRows?.[i]?.[j] || '';
             }
         }
 
         this.setCellsSize();
-        this.setBordersStructure();
+        this.setRowsStructure();
     }
 
     private setCellsSize() {

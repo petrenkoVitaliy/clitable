@@ -1,16 +1,12 @@
-import { BordersStructure } from '../../modules/BorderManager/types';
+import { RowsStructure } from '../../modules/RowsConstructor/types';
 import { CellCenteringType } from '../../modules/CellStylist/constants';
+import { CellsSizes, TerminalSize } from '../TableSchema/types';
 
-type RendererProps = {
-    cellsSizes: {
-        rows: number[];
-        cols: number[];
-    };
+export type RendererProps = {
+    cellsSizes: CellsSizes;
     content: string[][];
-    bordersStructure: BordersStructure;
+    rowsStructure: RowsStructure;
     tableHeight: number;
     cellCenteringType: CellCenteringType;
-    terminalSize: { cols: number; rows: number };
+    terminalSize: TerminalSize;
 };
-
-export { RendererProps };
