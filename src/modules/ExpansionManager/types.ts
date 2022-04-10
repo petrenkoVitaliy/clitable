@@ -1,9 +1,16 @@
 import { ExpansionType } from './constants';
 
+type RelativeMeasure<
+    TMeasure extends string,
+    TValue extends number = number
+> = `${TValue}${TMeasure}`;
+
+type PercentMeasure = RelativeMeasure<'%'>;
+
 type ExpansionTypeProps = {
     [ExpansionType.Responsive]: {
         expansionType: ExpansionType.Responsive;
-        tableWidth: number;
+        tableWidth: number | PercentMeasure;
         tableHeight?: number;
     };
     [ExpansionType.Auto]: {
@@ -13,7 +20,7 @@ type ExpansionTypeProps = {
     };
     [ExpansionType.Custom]: {
         expansionType: ExpansionType.Custom;
-        columnsSizes: number[];
+        columnsSizes: (number | PercentMeasure)[];
         rowsSizes?: number[];
     };
     [ExpansionType.Fixed]: {
@@ -23,20 +30,12 @@ type ExpansionTypeProps = {
     };
 };
 
-// TODO unused
-// type FullExpansionTypeProps = Omit<
-//     ExpansionTypeProps[ExpansionType.Auto],
-//     'expansionType'
-// > &
-//     Omit<ExpansionTypeProps[ExpansionType.Responsive], 'expansionType'> &
-//     Omit<ExpansionTypeProps[ExpansionType.Custom], 'expansionType'> &
-//     Omit<ExpansionTypeProps[ExpansionType.Fixed], 'expansionType'>;
-
 type ExpansionParams<T extends keyof ExpansionTypeProps = keyof ExpansionTypeProps> =
     ExpansionTypeProps[T];
 
 type ResizeParams<T extends keyof ExpansionTypeProps> = ExpansionParams<T> & {
     content: string[][];
+    terminalSize: { cols: number; rows: number };
 };
 
 type CellsSizes = {
@@ -44,4 +43,4 @@ type CellsSizes = {
     cols: number[];
 };
 
-export { ExpansionTypeProps, ResizeParams, CellsSizes, ExpansionParams };
+export { ExpansionTypeProps, ResizeParams, CellsSizes, ExpansionParams, PercentMeasure };

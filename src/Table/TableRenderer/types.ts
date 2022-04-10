@@ -1,3 +1,4 @@
+import { BordersStructure } from '../../modules/BorderManager/types';
 import { CellCenteringType } from '../../modules/CellStylist/constants';
 
 type RendererProps = {
@@ -6,11 +7,10 @@ type RendererProps = {
         cols: number[];
     };
     content: string[][];
-    bordersStructure: Array<
-        (sizes: { height: number; cols: number[]; maxAllowedLength?: number }) => string
-    >[];
+    bordersStructure: BordersStructure;
     tableHeight: number;
     cellCenteringType: CellCenteringType;
+    terminalSize: { cols: number; rows: number };
 };
 
 export { RendererProps };

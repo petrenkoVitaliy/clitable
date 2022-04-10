@@ -1,7 +1,7 @@
-import { getCharsCount } from '../../utils/common';
+import { getCharsCount, getMeasuresSum, parseMeasure } from '../../utils/common';
 
 import { ExpansionType } from './constants';
-import { ExpansionTypeProps, ResizeParams, CellsSizes } from './types';
+import { ExpansionTypeProps, ResizeParams, CellsSizes, PercentMeasure } from './types';
 
 class ExpansionManager {
     private static getEmptySizes(): CellsSizes {
@@ -66,18 +66,40 @@ class ExpansionManager {
 
         [ExpansionType.Custom]: (params: {
             expansionType: ExpansionType.Custom;
-            columnsSizes: number[];
+            columnsSizes: (number | PercentMeasure)[];
             rowsSizes?: number[];
             content: string[][];
+            terminalSize: { cols: number; rows: number };
         }) => {
+            const { rowsSizes, content, terminalSize } = params;
+            const qualitativeColsSize = terminalSize.cols - content[0].length - 1;
+            const columnsSizes = parseMeasure(params.columnsSizes, qualitativeColsSize);
+
+            const sizesSum = {
+                cols: getMeasuresSum(params.columnsSizes, qualitativeColsSize),
+                rows: rowsSizes?.reduce((acc, rowSize) => (acc += rowSize), 0),
+            };
+
             const sizes = this.getEmptySizes();
+            const lengths = {
+                cols: 0,
+                rows: 0,
+            };
 
-            for (let j = 0; j < params.content[0].length; j++) {
-                sizes.cols[j] = params.columnsSizes[j] || 1;
+            for (let j = 0; j < content[0].length; j++) {
+                sizes.cols[j] = columnsSizes[j] || 1;
+                lengths.cols += sizes.cols[j];
+            }
 
-                for (let i = 0; i < params.content.length; i++) {
-                    sizes.rows[i] = params.rowsSizes?.[i] || 1;
-                }
+            for (let i = 0; i < content.length; i++) {
+                sizes.rows[i] = rowsSizes?.[i] || 1;
+                lengths.rows += sizes.rows[i];
+            }
+
+            sizes.cols[0] += sizesSum.cols - lengths.cols;
+
+            if (sizesSum.rows) {
+                sizes.rows[0] += sizesSum.rows - lengths.rows;
             }
 
             return sizes;
@@ -86,12 +108,20 @@ class ExpansionManager {
         [ExpansionType.Responsive]: (params: {
             expansionType: ExpansionType.Responsive;
             content: string[][];
-            tableWidth: number;
+            terminalSize: { cols: number; rows: number };
+            tableWidth: number | PercentMeasure;
             tableHeight?: number;
         }) => {
+            let tableHeight = params.tableHeight;
+
+            const { content, terminalSize } = params;
+
+            const tableWidth = parseMeasure(params.tableWidth, terminalSize.cols);
+
             const autoSizes = this.expansionTypeStrategy[ExpansionType.Auto]({
                 expansionType: ExpansionType.Auto,
-                content: params.content,
+                content: content,
+                terminalSize: terminalSize,
             });
 
             const sizesSum = {
@@ -99,13 +129,13 @@ class ExpansionManager {
                 rows: autoSizes.rows.reduce((acc, rowSize) => (acc += rowSize), 0),
             };
 
-            if (!params.tableHeight) {
-                params.tableHeight = sizesSum.rows + params.content.length + 1;
+            if (!tableHeight) {
+                tableHeight = sizesSum.rows + content.length + 1;
             }
 
             const multipliers = {
-                rows: (params.tableHeight - params.content.length - 1) / sizesSum.rows,
-                cols: (params.tableWidth - params.content[0].length - 1) / sizesSum.cols,
+                rows: (tableHeight - params.content.length - 1) / sizesSum.rows,
+                cols: (tableWidth - params.content[0].length - 1) / sizesSum.cols,
             };
 
             const lengths = {
@@ -128,8 +158,8 @@ class ExpansionManager {
                 }, [] as number[]),
             };
 
-            sizes.cols[0] += Math.abs(params.tableWidth - lengths.cols);
-            sizes.rows[0] += Math.abs(params.tableHeight - lengths.rows);
+            sizes.cols[0] += tableWidth - params.content[0].length - 1 - lengths.cols;
+            sizes.rows[0] += tableHeight - params.content.length - 1 - lengths.rows;
 
             return sizes;
         },

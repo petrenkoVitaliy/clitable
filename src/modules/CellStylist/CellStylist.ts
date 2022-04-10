@@ -3,8 +3,31 @@ import { CellCenteringType } from './constants';
 class CellStylist {
     private cellCentering: CellCenteringType;
 
-    constructor(params: { cellCentering: CellCenteringType }) {
+    constructor(params?: { cellCentering: CellCenteringType }) {
+        this.cellCentering = params?.cellCentering || CellCenteringType.Center;
+    }
+
+    public updateStyle(params: { cellCentering: CellCenteringType }) {
         this.cellCentering = params.cellCentering;
+    }
+
+    public styleCellValue(params: { cellSize: number; cellValue: string }): string {
+        let value = '';
+
+        if (params.cellValue.length >= params.cellSize) {
+            value = params.cellValue.slice(0, params.cellSize);
+        } else {
+            const { leftSpacesCount, rightSpacesCount } = this.cellCenteringStrategies[
+                this.cellCentering
+            ](params.cellSize, params.cellValue);
+
+            value =
+                this.getSpacesRow(leftSpacesCount) +
+                params.cellValue +
+                this.getSpacesRow(rightSpacesCount);
+        }
+
+        return value;
     }
 
     private getSpacesCountsMap() {
@@ -56,41 +79,6 @@ class CellStylist {
             return spacesCountsMap;
         },
     };
-
-    private cropCellValue(value: string, maxAllowedLength: number): string {
-        if (maxAllowedLength <= 0) {
-            return '';
-        }
-
-        return value.slice(0, maxAllowedLength);
-    }
-
-    public styleCellValue(params: {
-        cellSize: number;
-        cellValue: string;
-        maxAllowedLength?: number;
-    }): string {
-        let value = '';
-
-        if (params.cellValue.length >= params.cellSize) {
-            value = params.cellValue.slice(0, params.cellSize);
-        } else {
-            const { leftSpacesCount, rightSpacesCount } = this.cellCenteringStrategies[
-                this.cellCentering
-            ](params.cellSize, params.cellValue);
-
-            value =
-                this.getSpacesRow(leftSpacesCount) +
-                params.cellValue +
-                this.getSpacesRow(rightSpacesCount);
-        }
-
-        if (params.maxAllowedLength) {
-            value = this.cropCellValue(value, params.maxAllowedLength);
-        }
-
-        return value;
-    }
 }
 
 export { CellStylist };

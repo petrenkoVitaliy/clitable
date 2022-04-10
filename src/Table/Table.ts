@@ -2,46 +2,50 @@ import { TableSchema } from './TableSchema/TableSchema';
 import { TableRenderer } from './TableRenderer/TableRenderer';
 
 import { TableSchemaProps, UpdateTableSchemaProps } from './TableSchema/types';
-import { RenderType } from './constants';
+import { TerminalCanvas } from '../modules/TerminalCanvas/TerminalCanvas';
+import { debounce } from '../utils/common';
+import { TableVirtualizer } from './TableVirtualizer/TableVirtualizer';
+
+const DEBOUNCE_DELAY = 1000;
 
 class Table extends TableSchema {
     private tableRenderer = new TableRenderer();
+    private tableVirtualizer = new TableVirtualizer();
 
     constructor(props: TableSchemaProps) {
         super(props);
+
+        this.addResizeListener();
     }
 
-    private getRenderParams() {
-        return {
-            cellsSizes: this.cellsSizes,
-            content: this.content,
-            bordersStructure: this.bordersStructure,
-            tableHeight: this.tableHeight,
-            cellCenteringType: this.cellCenteringType,
-        };
+    public clear() {
+        this.tableRenderer.clearTable();
     }
 
-    public update(props: UpdateTableSchemaProps) {
-        const changedProps = this.updateProps(props);
+    public render(props?: UpdateTableSchemaProps) {
+        // TerminalCanvas.save();
 
-        switch (true) {
-            case changedProps.contentRows:
-            case changedProps.expansion:
-                this.render(RenderType.Full);
-
-                return;
-
-            case changedProps.cellCenteringType:
-                this.render(RenderType.Content);
-
-                return;
+        if (props) {
+            this.updateProps(props);
         }
+
+        const params = this.getRenderParams();
+        const virtualTable = this.tableVirtualizer.updateVirtualTable(params);
+
+        this.tableRenderer.render(virtualTable);
+
+        // TerminalCanvas.restore();
     }
 
-    public render(renderType?: RenderType) {
-        const params = this.getRenderParams();
+    private addResizeListener() {
+        const updateTable = debounce(this.render.bind(this), DEBOUNCE_DELAY);
 
-        this.tableRenderer.render(renderType || RenderType.Full, params);
+        TerminalCanvas.addResizeListener(() => {
+            // TODO add boolean flag here
+            this.tableRenderer.clearTable();
+
+            updateTable();
+        });
     }
 }
 

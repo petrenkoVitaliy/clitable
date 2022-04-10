@@ -1,12 +1,13 @@
 import { END_LINE } from '../../Table/constants';
+import { cropToLength } from '../../utils/common';
 
 import { BORDERS } from './constants';
 import { RowPartial, RowPartialGenerationProps } from './types';
 
+// TODO not partial anymore
 abstract class BorderPartial {
-    private static constructRow = (params: {
+    private static constructLine = (params: {
         rowParts: (string | RowPartial)[];
-        height?: number;
         maxAllowedLength?: number | undefined;
     }) => {
         let singleRow = params.rowParts
@@ -14,19 +15,25 @@ abstract class BorderPartial {
                 typeof rowPart === 'string'
                     ? rowPart
                     : Array.from(Array(rowPart.colSizes.length))
-                          .map((_, index) =>
-                              rowPart.partial.repeat(rowPart.colSizes[index] || 1)
-                          )
+                          .map((_, index) => {
+                              return rowPart.values && rowPart.values[index]
+                                  ? cropToLength(
+                                        rowPart.values[index],
+                                        rowPart.colSizes[index]
+                                    )
+                                  : rowPart.partial.repeat(rowPart.colSizes[index] || 1);
+                          })
                           .join(rowPart.separatedBy)
             )
             .join('');
 
-        if (params.maxAllowedLength) {
+        if (params.maxAllowedLength && singleRow.length > params.maxAllowedLength) {
             singleRow = singleRow.slice(0, params.maxAllowedLength);
         }
 
+        // TODO no!
         let row = singleRow;
-        for (let i = 1; i < (params.height || 1); i++) {
+        for (let i = 1; i < 1; i++) {
             row += `${END_LINE}${singleRow}`;
         }
 
@@ -35,7 +42,7 @@ abstract class BorderPartial {
 
     protected static generateRowPartial = {
         TopLine: (params: RowPartialGenerationProps) =>
-            this.constructRow({
+            this.constructLine({
                 rowParts: [
                     BORDERS.topLeft,
                     {
@@ -49,22 +56,22 @@ abstract class BorderPartial {
             }),
 
         ContentLine: (params: RowPartialGenerationProps) =>
-            this.constructRow({
+            this.constructLine({
                 rowParts: [
                     BORDERS.vertical,
                     {
                         separatedBy: BORDERS.vertical,
                         colSizes: params.cols,
+                        values: params.values,
                         partial: ' ',
                     },
                     BORDERS.vertical,
                 ],
-                height: params.height,
                 maxAllowedLength: params.maxAllowedLength,
             }),
 
         BottomLine: (params: RowPartialGenerationProps) =>
-            this.constructRow({
+            this.constructLine({
                 rowParts: [
                     BORDERS.bottomLeft,
                     {
@@ -78,7 +85,7 @@ abstract class BorderPartial {
             }),
 
         SeparatorLine: (params: RowPartialGenerationProps) =>
-            this.constructRow({
+            this.constructLine({
                 rowParts: [
                     BORDERS.middleLeft,
                     {

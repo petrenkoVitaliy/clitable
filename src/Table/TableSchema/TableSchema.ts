@@ -1,4 +1,3 @@
-import { Comparator } from '../../modules/Comparator/Comparator';
 import { ExpansionType } from '../../modules/ExpansionManager/constants';
 import { BorderManager } from '../../modules/BorderManager/BorderManager';
 import { ExpansionParams } from '../../modules/ExpansionManager/types';
@@ -7,6 +6,8 @@ import { CellCenteringType } from '../../modules/CellStylist/constants';
 
 import { BORDER_SIZE } from '../constants';
 import { TableSchemaProps, UpdateTableSchemaProps } from './types';
+import { TerminalCanvas } from '../../modules/TerminalCanvas/TerminalCanvas';
+import { BordersStructure } from '../../modules/BorderManager/types';
 
 class TableSchema {
     protected expansionParams: ExpansionParams = {
@@ -17,9 +18,7 @@ class TableSchema {
 
     protected content: string[][] = [];
 
-    protected bordersStructure: Array<
-        (sizes: { height: number; cols: number[]; maxAllowedLength?: number }) => string
-    >[] = [];
+    protected bordersStructure: BordersStructure = [];
 
     protected cellsSizes: {
         cols: number[];
@@ -34,15 +33,17 @@ class TableSchema {
         cols: 0,
     };
 
-    protected tableHeight = 0;
+    protected terminalSize = { ...TerminalCanvas.getTerminalSize() };
 
-    private comparator: Comparator = new Comparator();
+    protected tableHeight = 0;
 
     constructor(props: TableSchemaProps) {
         this.initTable(props);
     }
 
     public initTable(props: UpdateTableSchemaProps) {
+        const terminalSize = { ...TerminalCanvas.getTerminalSize() };
+
         if (props.cellCenteringType) {
             this.cellCenteringType = props.cellCenteringType;
         }
@@ -51,19 +52,36 @@ class TableSchema {
             this.expansionParams = props.expansion;
         }
 
-        this.parseContent(props.contentRows || []);
+        if (props.contentRows) {
+            this.parseContent(props.contentRows);
+        } else {
+            const isTerminalSizeChanged =
+                this.terminalSize.cols !== terminalSize.cols ||
+                this.terminalSize.rows !== terminalSize.rows;
+
+            if (isTerminalSizeChanged) {
+                this.terminalSize = terminalSize;
+
+                this.setCellsSize();
+            }
+        }
     }
 
     public updateProps(props: UpdateTableSchemaProps) {
-        const changedProps = this.comparator.compareTableProps(props, {
-            contentRows: this.content,
-            cellCenteringType: this.cellCenteringType,
-            expansion: this.expansionParams,
-        });
-
         this.initTable(props);
 
-        return changedProps;
+        return this.getRenderParams();
+    }
+
+    protected getRenderParams() {
+        return {
+            cellsSizes: this.cellsSizes,
+            content: this.content,
+            bordersStructure: this.bordersStructure,
+            tableHeight: this.tableHeight,
+            cellCenteringType: this.cellCenteringType,
+            terminalSize: this.terminalSize,
+        };
     }
 
     private setBordersStructure() {
@@ -95,10 +113,10 @@ class TableSchema {
     }
 
     private setCellsSize() {
-        // TODO move to prop
         const sizes = ExpansionManager.getCellsSizes({
             ...this.expansionParams,
             content: this.content,
+            terminalSize: this.terminalSize,
         });
 
         this.cellsSizes = { ...sizes };

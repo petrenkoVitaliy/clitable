@@ -1,11 +1,11 @@
 import { BorderPartial } from './BorderPartial';
 
 import { ROW_TYPES } from './constants';
-import { RowPartialGenerationProps } from './types';
+import { BordersStructure, RowPartialGenerationProps } from './types';
 
 class BorderManager extends BorderPartial {
     private static rowTypes: {
-        [key in ROW_TYPES]: Array<(sizes: RowPartialGenerationProps) => string>;
+        [key in ROW_TYPES]: Array<(params: RowPartialGenerationProps) => string>;
     } = {
         Header: [
             this.generateRowPartial.TopLine,
@@ -27,21 +27,30 @@ class BorderManager extends BorderPartial {
         ],
     };
 
-    public static getBordersStructure(
-        rowsCount: number
-    ): Array<(sizes: RowPartialGenerationProps) => string>[] {
+    private static buildRow(
+        rowBuilders: Array<(params: RowPartialGenerationProps) => string>
+    ) {
+        return (params: RowPartialGenerationProps) =>
+            rowBuilders.reduce((acc, rowBuilder) => {
+                acc.push(rowBuilder(params));
+
+                return acc;
+            }, [] as string[]);
+    }
+
+    public static getBordersStructure(rowsCount: number): BordersStructure {
         if (rowsCount === 1) {
-            return [this.rowTypes.Single];
+            return [this.buildRow(this.rowTypes.Single)];
         }
 
         return Array.from(Array(rowsCount)).map((_, index) => {
             switch (index) {
                 case 0:
-                    return this.rowTypes.Header;
+                    return this.buildRow(this.rowTypes.Header);
                 case rowsCount - 1:
-                    return this.rowTypes.Footer;
+                    return this.buildRow(this.rowTypes.Footer);
                 default:
-                    return this.rowTypes.Body;
+                    return this.buildRow(this.rowTypes.Body);
             }
         });
     }

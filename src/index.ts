@@ -1,26 +1,30 @@
-// console.log(process.stdout.isTTY);
-// process.stdout.on('resize', () => {
-//     console.log(process.stdout.getWindowSize());
-// });
-// process.stdout.cursorTo(10, 0);
-// process.stdout.write('10');
-
-// process.stdin.resume();
-
 import { Table } from './Table/Table';
 import { CellCenteringType } from './modules/CellStylist/constants';
 import { ExpansionType } from './modules/ExpansionManager/constants';
+// import * as readline from 'readline';
 
 const sleep = async (delayMs: number) => new Promise((r) => setTimeout(r, delayMs));
 
 const table = new Table({
     expansion: {
-        expansionType: ExpansionType.Auto,
+        expansionType: ExpansionType.Custom,
+        columnsSizes: ['33.3%', '33.3%', '33.3%'],
     },
 
     cellCenteringType: CellCenteringType.Center,
 
-    contentRows: [],
+    contentRows: [
+        [
+            'bbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+            'bbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+            'bbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+        ],
+        [
+            'bbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+            'bbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+            'bbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+        ],
+    ],
 });
 
 const LOREM_IPSUM = [
@@ -35,18 +39,9 @@ const LOREM_IPSUM = [
 ];
 
 const main = async () => {
-    table.render();
-    // await sleep(1500);
     let i = 0;
     while (1) {
-        await sleep(200);
-        table.update({
-            expansion: {
-                expansionType: ExpansionType.Responsive,
-                tableWidth: 100,
-            },
-            cellCenteringType: CellCenteringType.Center,
-
+        table.render({
             contentRows: [
                 [
                     LOREM_IPSUM[i % LOREM_IPSUM.length] || '',
@@ -54,11 +49,23 @@ const main = async () => {
                     String(i),
                 ],
                 [String(i), String(i), LOREM_IPSUM[i % LOREM_IPSUM.length] || ''],
+                ['asd'],
             ],
         });
+
+        await sleep(200);
 
         i++;
     }
 };
+
+// readline.emitKeypressEvents(process.stdin);
+
+// if (process.stdin.isTTY) process.stdin.setRawMode(true);
+
+// process.stdin.on('keypress', (_chunk, key) => {
+//     if (key && key.name == 'q') process.exit();
+//     process.stdout.write(key.name);
+// });
 
 main();
