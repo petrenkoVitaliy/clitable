@@ -1,5 +1,6 @@
+import { END_LINE } from '../../Table/constants';
 import { CellsSizes, TerminalSize } from '../../Table/TableSchema/types';
-import { getCharsCount } from '../../utils/common';
+import { getCharsCount, getValueWidth } from '../../utils/common';
 import { getMeasuresSum, parseMeasure } from '../../utils/measure';
 
 import { ExpansionType } from './constants';
@@ -34,10 +35,11 @@ class ExpansionManager {
                     }
 
                     if (params.content[i][j].length > sizes.cols[j]) {
-                        sizes.cols[j] = params.content[i][j].length + marginHorizontal;
+                        sizes.cols[j] =
+                            getValueWidth(params.content[i][j]) + marginHorizontal;
                     }
 
-                    const rowsInValue = getCharsCount(params.content[i][j], '\n') + 1;
+                    const rowsInValue = getCharsCount(params.content[i][j], END_LINE) + 1;
                     if (rowsInValue > sizes.rows[i]) {
                         sizes.rows[i] = rowsInValue + marginVertical;
                     }

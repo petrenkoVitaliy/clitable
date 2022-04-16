@@ -1,44 +1,48 @@
-import { END_LINE } from '../../Table/constants';
 import { cropToLength } from '../../utils/common';
 
 import { BORDERS } from './constants';
 import { LinePartial, LinePartialGenerationProps } from './types';
 
 abstract class LinesConstructor {
+    private static buildLinePartial = (linePartial: LinePartial, lineIndex: number) => {
+        const subLine = Array.from(Array(linePartial.colsSizes.length))
+            .map((_, index) => {
+                return linePartial.values && linePartial.values[index]
+                    ? cropToLength(
+                          linePartial.values[index]?.[lineIndex] || '',
+                          linePartial.colsSizes[index]
+                      )
+                    : linePartial.partial.repeat(linePartial.colsSizes[index] || 0);
+            })
+            .join(linePartial.separatedBy);
+
+        return subLine;
+    };
+
     private static constructLine = (params: {
         lineParts: (string | LinePartial)[];
         maxAllowedLength?: number | undefined;
-    }) => {
-        let singleRow = params.lineParts
-            .map((linePart) =>
-                typeof linePart === 'string'
-                    ? linePart
-                    : Array.from(Array(linePart.colSizes.length))
-                          .map((_, index) => {
-                              return linePart.values && linePart.values[index]
-                                  ? cropToLength(
-                                        linePart.values[index],
-                                        linePart.colSizes[index]
-                                    )
-                                  : linePart.partial.repeat(
-                                        linePart.colSizes[index] || 1
-                                    );
-                          })
-                          .join(linePart.separatedBy)
-            )
-            .join('');
+        rowSize?: number;
+    }): string[] => {
+        // TODO - 5 - use maxAllowedLength ;)
 
-        if (params.maxAllowedLength && singleRow.length > params.maxAllowedLength) {
-            singleRow = singleRow.slice(0, params.maxAllowedLength);
+        const rowSize = params.rowSize || 1;
+
+        const rowLines: string[] = [];
+
+        for (let lineIndex = 0; lineIndex < rowSize; lineIndex++) {
+            const line = params.lineParts
+                .map((linePart) =>
+                    typeof linePart === 'string'
+                        ? linePart
+                        : this.buildLinePartial(linePart, lineIndex)
+                )
+                .join('');
+
+            rowLines.push(line);
         }
 
-        // TODO - 1 - handle multiline content
-        let row = singleRow;
-        for (let i = 1; i < 1; i++) {
-            row += `${END_LINE}${singleRow}`;
-        }
-
-        return row;
+        return rowLines;
     };
 
     protected static generateLine = {
@@ -47,9 +51,9 @@ abstract class LinesConstructor {
                 lineParts: [
                     BORDERS.topLeft,
                     {
-                        separatedBy: BORDERS.topCenter,
-                        colSizes: params.cols,
                         partial: BORDERS.horizontal,
+                        separatedBy: BORDERS.topCenter,
+                        colsSizes: params.colsSizes,
                     },
                     BORDERS.topRight,
                 ],
@@ -62,12 +66,13 @@ abstract class LinesConstructor {
                     BORDERS.vertical,
                     {
                         separatedBy: BORDERS.vertical,
-                        colSizes: params.cols,
+                        colsSizes: params.colsSizes,
                         values: params.values,
                         partial: ' ',
                     },
                     BORDERS.vertical,
                 ],
+                rowSize: params.rowSize,
                 maxAllowedLength: params.maxAllowedLength,
             }),
 
@@ -77,7 +82,7 @@ abstract class LinesConstructor {
                     BORDERS.bottomLeft,
                     {
                         separatedBy: BORDERS.bottomCenter,
-                        colSizes: params.cols,
+                        colsSizes: params.colsSizes,
                         partial: BORDERS.horizontal,
                     },
                     BORDERS.bottomRight,
@@ -91,7 +96,7 @@ abstract class LinesConstructor {
                     BORDERS.middleLeft,
                     {
                         separatedBy: BORDERS.middleCenter,
-                        colSizes: params.cols,
+                        colsSizes: params.colsSizes,
                         partial: BORDERS.horizontal,
                     },
                     BORDERS.middleRight,

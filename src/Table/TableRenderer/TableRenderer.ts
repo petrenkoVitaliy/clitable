@@ -3,7 +3,7 @@ import { BORDER_SIZE, END_LINE } from '../constants';
 import { VirtualTableDiff } from '../TableVirtualizer/types';
 
 class TableRenderer {
-    private isRendered = false;
+    public isRendered = false;
     private renderedHeight = 0;
 
     public clearTable() {
@@ -43,24 +43,23 @@ class TableRenderer {
         this.renderedHeight = 0;
 
         for (let i = 0; i < virtualTableDiff.length; i++) {
-            const colDiff = virtualTableDiff[i];
+            const colDifferences = virtualTableDiff[i];
 
-            if (colDiff) {
-                // TODO - 3 - optimize
-                Object.keys(virtualTableDiff[i] || {}).forEach((_colIndex) => {
-                    const colIndex = Number(_colIndex);
-
-                    TerminalCanvas.cursorTo(Number(colIndex));
-                    TerminalCanvas.print(colDiff[colIndex]);
+            if (colDifferences) {
+                colDifferences.forEach(({ colIndex, value }) => {
+                    TerminalCanvas.cursorTo(colIndex);
+                    TerminalCanvas.print(value);
                 });
 
                 TerminalCanvas.print(END_LINE);
             }
-            if (colDiff === null) {
+
+            if (colDifferences === null) {
                 TerminalCanvas.clearLine(0);
                 TerminalCanvas.moveToRow(0, 1);
             }
-            if (colDiff === undefined) {
+
+            if (colDifferences === undefined) {
                 TerminalCanvas.moveToRow(0, 1);
             }
 

@@ -23,7 +23,9 @@ class Table extends TableSchema {
     }
 
     public render(props?: TableSchemaProps) {
-        // TerminalCanvas.save();
+        if (this.tableRenderer.isRendered) {
+            TerminalCanvas.restore();
+        }
 
         if (props) {
             this.updateProps(props);
@@ -36,7 +38,7 @@ class Table extends TableSchema {
             forceRerender: !!props?.forceRerender,
         });
 
-        // TerminalCanvas.restore();
+        TerminalCanvas.save();
     }
 
     private addResizeListener() {

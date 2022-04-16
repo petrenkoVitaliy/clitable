@@ -1,39 +1,111 @@
+import { END_LINE } from '../../Table/constants';
+import { getCharsCount } from '../../utils/common';
 import { CellCenteringType } from './constants';
+import { CellValue } from './types';
 
 class CellStylist {
-    private cellCentering: CellCenteringType;
+    private horizontalCentering: CellCenteringType = CellCenteringType.Center;
+    private verticalCentering: CellCenteringType = CellCenteringType.Center;
 
-    constructor(params?: { cellCentering: CellCenteringType }) {
-        this.cellCentering = params?.cellCentering || CellCenteringType.Center;
+    constructor(params?: {
+        verticalCentering: CellCenteringType;
+        horizontalCentering: CellCenteringType;
+    }) {
+        if (params) {
+            this.updateStyle(params);
+        }
     }
 
-    public updateStyle(params: { cellCentering: CellCenteringType }) {
-        this.cellCentering = params.cellCentering;
+    public updateStyle(params: {
+        verticalCentering: CellCenteringType;
+        horizontalCentering: CellCenteringType;
+    }) {
+        this.horizontalCentering =
+            params?.horizontalCentering || CellCenteringType.Center;
+        this.verticalCentering = params?.verticalCentering || CellCenteringType.Center;
     }
 
-    public styleCellValue(params: { cellSize: number; cellValue: string }): string {
-        let value = '';
+    public styleCellValue(params: {
+        cellWidth: number;
+        cellHeight: number;
+        cellValue: string;
+    }): CellValue {
+        const { spacesBefore } = this.cellCenteringStrategies[this.verticalCentering](
+            params.cellHeight,
+            getCharsCount(params.cellValue, END_LINE) + 1
+        );
 
-        if (params.cellValue.length >= params.cellSize) {
-            value = params.cellValue.slice(0, params.cellSize);
-        } else {
-            const { leftSpacesCount, rightSpacesCount } = this.cellCenteringStrategies[
-                this.cellCentering
-            ](params.cellSize, params.cellValue);
+        const cellValueByLines = this.centerValueVertically(
+            params.cellValue,
+            spacesBefore
+        );
 
-            value =
-                this.getSpacesRow(leftSpacesCount) +
-                params.cellValue +
-                this.getSpacesRow(rightSpacesCount);
+        return Array.from(Array(params.cellHeight)).reduce((acc, _, lineIndex) => {
+            const valueLine: string | undefined = cellValueByLines[lineIndex];
+
+            if (!valueLine) {
+                acc[lineIndex] = this.getSpacesRow(params.cellWidth);
+
+                return acc;
+            }
+
+            if (valueLine.length >= params.cellWidth) {
+                acc[lineIndex] = valueLine;
+
+                return acc;
+            }
+
+            if (valueLine.length > params.cellWidth) {
+                acc[lineIndex] = valueLine.slice(0, params.cellWidth);
+
+                return acc;
+            }
+
+            const { spacesAfter, spacesBefore } = this.cellCenteringStrategies[
+                this.horizontalCentering
+            ](params.cellWidth, valueLine.length);
+
+            acc[lineIndex] = this.centerValueHorizontally(
+                valueLine,
+                spacesBefore,
+                spacesAfter
+            );
+
+            return acc;
+        }, {} as CellValue);
+    }
+
+    private centerValueHorizontally(
+        value: string,
+        spacesBefore: number,
+        spacesAfter: number
+    ): string {
+        return this.getSpacesRow(spacesBefore) + value + this.getSpacesRow(spacesAfter);
+    }
+
+    private centerValueVertically(
+        value: string,
+        spacesBefore: number
+    ): (string | undefined)[] {
+        const valueLines: (string | undefined)[] = [];
+
+        const splittedValue = value.split(END_LINE);
+
+        let lineIndex = 0;
+
+        while (lineIndex++ < spacesBefore) {
+            valueLines.push(undefined);
         }
 
-        return value;
+        valueLines.push(...splittedValue);
+
+        return valueLines;
     }
 
     private getSpacesCountsMap() {
         return {
-            leftSpacesCount: 0,
-            rightSpacesCount: 0,
+            spacesBefore: 0,
+            spacesAfter: 0,
         };
     }
 
@@ -44,37 +116,36 @@ class CellStylist {
     private cellCenteringStrategies: {
         [key in CellCenteringType]: (
             cellSize: number,
-            cellValue: string
+            valueLength: number
         ) => {
-            leftSpacesCount: number;
-            rightSpacesCount: number;
+            spacesBefore: number;
+            spacesAfter: number;
         };
     } = {
-        [CellCenteringType.Center]: (cellSize: number, cellValue: string) => {
+        [CellCenteringType.Center]: (cellSize: number, valueLength: number) => {
             const spacesCountsMap = this.getSpacesCountsMap();
-            const spacesCount = cellSize - cellValue.length;
+            const spacesCount = cellSize - valueLength;
 
-            spacesCountsMap.leftSpacesCount = Math.floor(spacesCount / 2);
-            spacesCountsMap.rightSpacesCount =
-                spacesCount - spacesCountsMap.leftSpacesCount;
+            spacesCountsMap.spacesBefore = Math.floor(spacesCount / 2);
+            spacesCountsMap.spacesAfter = spacesCount - spacesCountsMap.spacesBefore;
 
             return spacesCountsMap;
         },
 
-        [CellCenteringType.Left]: (cellSize: number, cellValue: string) => {
+        [CellCenteringType.Left]: (cellSize: number, valueLength: number) => {
             const spacesCountsMap = this.getSpacesCountsMap();
 
-            spacesCountsMap.leftSpacesCount = 0;
-            spacesCountsMap.rightSpacesCount = cellSize - cellValue.length;
+            spacesCountsMap.spacesBefore = 0;
+            spacesCountsMap.spacesAfter = cellSize - valueLength;
 
             return spacesCountsMap;
         },
 
-        [CellCenteringType.Right]: (cellSize: number, cellValue: string) => {
+        [CellCenteringType.Right]: (cellSize: number, valueLength: number) => {
             const spacesCountsMap = this.getSpacesCountsMap();
 
-            spacesCountsMap.leftSpacesCount = cellSize - cellValue.length;
-            spacesCountsMap.rightSpacesCount = 0;
+            spacesCountsMap.spacesBefore = cellSize - valueLength;
+            spacesCountsMap.spacesAfter = 0;
 
             return spacesCountsMap;
         },

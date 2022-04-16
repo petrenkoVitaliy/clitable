@@ -10,6 +10,13 @@
             "request": "attach",
             "skipFiles": ["<node_internals>/**"],
             "type": "node"
+        },
+        {
+            "name": "attach by pid",
+            "processId": "${command:PickProcess}",
+            "request": "attach",
+            "skipFiles": ["<node_internals>/**"],
+            "type": "pwa-node"
         }
     ]
 }

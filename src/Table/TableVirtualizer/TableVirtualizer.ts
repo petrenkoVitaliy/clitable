@@ -1,9 +1,10 @@
 import { CellStylist } from '../../modules/CellStylist/CellStylist';
+import { CellValue } from '../../modules/CellStylist/types';
 import { RendererProps } from '../TableRenderer/types';
 import { RowDiff, VirtualTableDiff } from './types';
 
 class TableVirtualizer {
-    private isCropping = false;
+    private isCropping = true;
 
     private cellStylist: CellStylist;
 
@@ -38,10 +39,13 @@ class TableVirtualizer {
 
         for (let i = 0; i < rows; i++) {
             if (prevTable[i] !== table[i]) {
-                virtualTableDiff[i] = {};
+                virtualTableDiff[i] = [];
 
                 if (!prevTable[i] && table[i]) {
-                    (virtualTableDiff[i] as RowDiff)[0] = table[i]; // ¯\_(ツ)_/¯
+                    virtualTableDiff[i]?.push({
+                        colIndex: 0,
+                        value: table[i],
+                    });
                 }
 
                 if (!table[i] && prevTable[i]) {
@@ -49,9 +53,7 @@ class TableVirtualizer {
                 }
 
                 if (table[i] && prevTable[i]) {
-                    const changedCols: {
-                        [colIndex: number]: string;
-                    } = {};
+                    const changedCols: RowDiff = [];
 
                     const rowLength = Math.max(prevTable[i].length, table[i].length);
 
@@ -60,12 +62,12 @@ class TableVirtualizer {
                         let k = j;
 
                         while (k < rowLength && prevTable[i][k] !== table[i][k]) {
-                            changedSubstring += table[i][k];
+                            changedSubstring += table[i][k] || ' ';
                             k++;
                         }
 
                         if (changedSubstring) {
-                            changedCols[j] = changedSubstring;
+                            changedCols.push({ colIndex: j, value: changedSubstring });
                         }
 
                         j = k;
@@ -81,16 +83,20 @@ class TableVirtualizer {
         this.virtualTableDiff = virtualTableDiff;
     }
 
-    private getTableValues(params: RendererProps): string[][] {
+    private getTableValues(params: RendererProps): CellValue[][] {
         // TODO - 2 - check entities vs instance
-        this.cellStylist.updateStyle({ cellCentering: params.cellCenteringType });
+        this.cellStylist.updateStyle({
+            horizontalCentering: params.horizontalCentering,
+            verticalCentering: params.verticalCentering,
+        });
 
-        return params.content.reduce((acc, contentRow) => {
-            const tableValuesRow: string[] = [];
+        return params.content.reduce((acc, contentRow, rowIndex) => {
+            const tableValuesRow: CellValue[] = [];
 
             contentRow.forEach((cellValue, columnIndex) => {
                 const value = this.cellStylist.styleCellValue({
-                    cellSize: params.cellsSizes.cols[columnIndex],
+                    cellWidth: params.cellsSizes.cols[columnIndex],
+                    cellHeight: params.cellsSizes.rows[rowIndex],
                     cellValue,
                 });
 
@@ -100,7 +106,7 @@ class TableVirtualizer {
             acc.push(tableValuesRow);
 
             return acc;
-        }, [] as string[][]);
+        }, [] as CellValue[][]);
     }
 
     private createVirtualTable(params: RendererProps): string[] {
@@ -108,7 +114,8 @@ class TableVirtualizer {
 
         const virtualTable = params.rowsStructure.reduce((acc, rowStructure, index) => {
             const rowLines = rowStructure({
-                cols: params.cellsSizes.cols,
+                colsSizes: params.cellsSizes.cols,
+                rowSize: params.cellsSizes.rows[index],
                 values: tableValues[index],
 
                 ...(this.isCropping

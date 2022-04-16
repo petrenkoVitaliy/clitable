@@ -1,14 +1,20 @@
+import { CellValue } from '../CellStylist/types';
+
 export type LinePartial = {
     partial: string;
-    colSizes: number[];
+    colsSizes: number[];
     separatedBy: string;
-    values?: string[] | undefined;
+    rowSize?: number;
+    values?: CellValue[] | undefined;
 };
 
 export type LinePartialGenerationProps = {
-    cols: number[];
+    colsSizes: number[];
+    rowSize: number;
     maxAllowedLength?: number;
-    values?: string[];
+    values?: CellValue[];
 };
 
 export type RowsStructure = Array<(params: LinePartialGenerationProps) => string[]>;
+
+export type RowsBuilder = (params: LinePartialGenerationProps) => string[];

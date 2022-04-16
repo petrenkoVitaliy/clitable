@@ -12,7 +12,8 @@ import { RowsStructure } from '../../modules/RowsConstructor/types';
 class TableSchema {
     protected content: string[][] = [];
     protected rowsStructure: RowsStructure = [];
-    protected cellCenteringType: CellCenteringType = CellCenteringType.Center;
+    protected horizontalCentering: CellCenteringType = CellCenteringType.Center;
+    protected verticalCentering: CellCenteringType = CellCenteringType.Center;
     protected terminalSize = { ...TerminalCanvas.getTerminalSize() };
     protected tableHeight: number = 0;
     protected rerenderOnResize: boolean = true;
@@ -44,7 +45,8 @@ class TableSchema {
             content: this.content,
             rowsStructure: this.rowsStructure,
             tableHeight: this.tableHeight,
-            cellCenteringType: this.cellCenteringType,
+            horizontalCentering: this.horizontalCentering,
+            verticalCentering: this.verticalCentering,
             terminalSize: this.terminalSize,
         };
     }
@@ -52,8 +54,12 @@ class TableSchema {
     private parseTableProps(props: TableSchemaProps) {
         const terminalSize = { ...TerminalCanvas.getTerminalSize() };
 
-        if (props.cellCenteringType) {
-            this.cellCenteringType = props.cellCenteringType;
+        if (props.horizontalCentering) {
+            this.horizontalCentering = props.horizontalCentering;
+        }
+
+        if (props.verticalCentering) {
+            this.verticalCentering = props.verticalCentering;
         }
 
         if (props.rerenderOnResize !== undefined) {
@@ -83,7 +89,7 @@ class TableSchema {
         this.rowsStructure = RowsConstructor.getRowsStructure(this.tableSize.rows);
     }
 
-    private parseContent(contentRows: string[][]) {
+    private parseContent(contentRows: (string | number)[][]) {
         this.tableSize.rows = contentRows.length;
         this.tableSize.cols = 0;
 
@@ -99,7 +105,9 @@ class TableSchema {
             this.content[i] = [];
 
             for (let j = 0; j < this.tableSize.cols; j++) {
-                this.content[i]![j] = contentRows?.[i]?.[j] || '';
+                this.content[i]![j] = contentRows?.[i]?.[j]
+                    ? String(contentRows[i][j])
+                    : '';
             }
         }
 

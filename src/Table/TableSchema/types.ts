@@ -2,8 +2,9 @@ import { CellCenteringType } from '../../modules/CellStylist/constants';
 import { ExpansionParams } from '../../modules/ExpansionManager/types';
 
 export type TableSchemaProps = {
-    contentRows?: string[][];
-    cellCenteringType?: CellCenteringType;
+    contentRows?: (string | number)[][];
+    horizontalCentering?: CellCenteringType;
+    verticalCentering?: CellCenteringType;
     expansion?: ExpansionParams;
     forceRerender?: boolean;
     rerenderOnResize?: boolean;

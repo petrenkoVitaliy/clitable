@@ -7,6 +7,7 @@ export type RendererProps = {
     content: string[][];
     rowsStructure: RowsStructure;
     tableHeight: number;
-    cellCenteringType: CellCenteringType;
+    horizontalCentering: CellCenteringType;
+    verticalCentering: CellCenteringType;
     terminalSize: TerminalSize;
 };

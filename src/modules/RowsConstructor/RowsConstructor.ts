@@ -1,11 +1,11 @@
 import { LinesConstructor } from './LinesConstructor';
 
 import { ROW_TYPES } from './constants';
-import { RowsStructure, LinePartialGenerationProps } from './types';
+import { RowsStructure, LinePartialGenerationProps, RowsBuilder } from './types';
 
 class RowsConstructor extends LinesConstructor {
     private static rowTypes: {
-        [key in ROW_TYPES]: Array<(params: LinePartialGenerationProps) => string>;
+        [key in ROW_TYPES]: Array<RowsBuilder>;
     } = {
         Header: [
             this.generateLine.TopLine,
@@ -24,12 +24,10 @@ class RowsConstructor extends LinesConstructor {
         ],
     };
 
-    private static buildRow(
-        rowBuilders: Array<(params: LinePartialGenerationProps) => string>
-    ) {
+    private static buildRow(rowBuilders: Array<RowsBuilder>) {
         return (params: LinePartialGenerationProps) =>
             rowBuilders.reduce((acc, rowBuilder) => {
-                acc.push(rowBuilder(params));
+                acc.push(...rowBuilder(params));
 
                 return acc;
             }, [] as string[]);
