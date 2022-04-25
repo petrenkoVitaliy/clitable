@@ -42,7 +42,7 @@ async function spinnerExample() {
         const positionC = getCurrentPosition(i, 5, false, 1, 1);
         const positionD = getCurrentPosition(i, 7, true);
 
-        content[positionA.x][positionA.y] = '[ᗣ]';
+        content[positionA.x][positionA.y] = '1-1';
         style[positionA.x][positionA.y] = {
             color: ColorCodes.RED,
         };
