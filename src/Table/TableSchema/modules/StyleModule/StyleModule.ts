@@ -1,9 +1,10 @@
-import { ColorCodes } from '../../../../constants/common';
+import { ColorCodes, ModeCodes } from '../../../../constants/common';
 import {
     CellsSizes,
     CellStyle,
     ParsedCellStyle,
     ParsedStyleModel,
+    SelectedCell,
     StyleModel,
     StyleSchema,
     TableSize,
@@ -13,14 +14,21 @@ const DEFAULT_STYLE = {
     color: ColorCodes.WHITE,
 };
 
+const DEFAULT_SELECTED_STYLE = {
+    color: ColorCodes.RED,
+    mode: ModeCodes.BACKGROUND,
+};
+
 class StyleModule {
     private styleCacheMap: { [key: string]: CellStyle } = {};
 
     private styleSchema: StyleSchema = [];
     private styleModel: ParsedStyleModel = { general: DEFAULT_STYLE };
+    private selectedCellStyle: ParsedCellStyle = DEFAULT_SELECTED_STYLE;
 
     constructor() {
         this.cacheStyle(DEFAULT_STYLE);
+        this.cacheStyle(DEFAULT_SELECTED_STYLE);
     }
 
     public get schema() {
@@ -29,11 +37,11 @@ class StyleModule {
 
     public parseStyleModel(params: {
         styleModel: StyleModel;
-        tableWidth: number;
         tableSize: TableSize;
         cellsSizes: CellsSizes;
+        selectedCell: SelectedCell | undefined;
     }) {
-        const { styleModel, tableSize, cellsSizes } = params;
+        const { styleModel, tableSize, cellsSizes, selectedCell } = params;
 
         if ('color' in styleModel) {
             this.styleModel = {
@@ -44,16 +52,24 @@ class StyleModule {
                 general: this.parseStyle(styleModel.general),
                 rows: this.parseGenericStyle(styleModel.rows),
                 columns: this.parseGenericStyle(styleModel.columns),
-
                 cells: this.parseDeepGenericStyle(styleModel.cells),
             };
+
+            if (styleModel.selected) {
+                this.selectedCellStyle =
+                    this.parseStyle(styleModel.selected) || DEFAULT_SELECTED_STYLE;
+            }
         }
 
-        this.buildStyleSchema({ tableSize, cellsSizes });
+        this.buildStyleSchema({ tableSize, cellsSizes, selectedCell });
     }
 
-    public buildStyleSchema(params: { tableSize: TableSize; cellsSizes: CellsSizes }) {
-        const { tableSize, cellsSizes } = params;
+    public buildStyleSchema(params: {
+        tableSize: TableSize;
+        cellsSizes: CellsSizes;
+        selectedCell: SelectedCell | undefined;
+    }) {
+        const { tableSize, cellsSizes, selectedCell } = params;
 
         this.styleSchema = [];
 
@@ -75,6 +91,11 @@ class StyleModule {
                 isCellBorderMap.bottom = lineIndex === cellsSizes.rows[rowIndex];
 
                 for (let colIndex = 0; colIndex < tableSize.cols; colIndex++) {
+                    const isSelected =
+                        !!selectedCell &&
+                        rowIndex === selectedCell.row &&
+                        colIndex === selectedCell.column;
+
                     for (
                         let colLineIndex = -1;
                         colLineIndex <= cellsSizes.cols[colIndex];
@@ -87,7 +108,8 @@ class StyleModule {
                         const colLineStyle = this.getCellStyle(
                             rowIndex,
                             colIndex,
-                            isCellBorderMap
+                            isCellBorderMap,
+                            isSelected
                         );
 
                         if (colLineIndex === -1 && colIndex > 0) {
@@ -128,22 +150,34 @@ class StyleModule {
 
     /**
      * PRIORITIES:
-     * 1. cells
-     * 2. cols
-     * 3. rows
-     * 4. general
-     * 5. default
+     * 1. selected
+     * 2. cells
+     * 3. cols
+     * 4. rows
+     * 5. general
+     * 6. default
      */
     private getCellStyle(
         rowIndex: number,
         colIndex: number,
         isCellBorderMap: {
             [key in 'top' | 'bottom' | 'left' | 'right']: boolean;
-        }
+        },
+        isSelected: boolean
     ) {
         const borderType = (
             Object.keys(isCellBorderMap) as Array<keyof typeof isCellBorderMap>
         ).find((key) => !!isCellBorderMap[key as keyof typeof isCellBorderMap]);
+
+        if (isSelected) {
+            const style = borderType
+                ? this.selectedCellStyle?.border?.[borderType]
+                : this.selectedCellStyle;
+
+            if (style) {
+                return this.cacheStyle(style);
+            }
+        }
 
         if (this.styleModel.cells) {
             const cellStyle = this.styleModel.cells[rowIndex]?.[colIndex];

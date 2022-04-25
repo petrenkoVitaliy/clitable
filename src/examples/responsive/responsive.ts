@@ -1,6 +1,6 @@
+import { Centering, Expansion } from '../../constants/common';
 import { Table } from '../../Table/Table';
 import { sleep } from '../../utils/common';
-import { Centering, ColorCodes, Expansion, ModeCodes } from '../../constants/common';
 
 async function responsiveExample() {
     const content = [
@@ -62,52 +62,6 @@ async function responsiveExample() {
                 tableHeight: heightSizes[i % heightSizes.length],
             },
             content,
-            style: [
-                [
-                    {
-                        color: ColorCodes.GREEN,
-                        mode: ModeCodes.BACKGROUND,
-                    },
-                    {
-                        color: ColorCodes.RED,
-                        mode: ModeCodes.BACKGROUND,
-                    },
-                    {
-                        color: ColorCodes.GREEN,
-                        mode: ModeCodes.BACKGROUND,
-                    },
-                    {
-                        color: ColorCodes.RED,
-                        mode: ModeCodes.BACKGROUND,
-                    },
-                    {
-                        color: ColorCodes.GREEN,
-                        mode: ModeCodes.BACKGROUND,
-                    },
-                ],
-                [
-                    {
-                        color: ColorCodes.GREEN,
-                        mode: ModeCodes.BACKGROUND,
-                    },
-                    {
-                        color: ColorCodes.RED,
-                        mode: ModeCodes.BACKGROUND,
-                    },
-                    {
-                        color: ColorCodes.GREEN,
-                        mode: ModeCodes.BACKGROUND,
-                    },
-                    {
-                        color: ColorCodes.RED,
-                        mode: ModeCodes.BACKGROUND,
-                    },
-                    {
-                        color: ColorCodes.GREEN,
-                        mode: ModeCodes.BACKGROUND,
-                    },
-                ],
-            ],
         });
 
         await sleep(300);

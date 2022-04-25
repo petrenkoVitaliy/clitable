@@ -5,6 +5,7 @@ import { TerminalCanvas } from '../helpers/TerminalCanvas/TerminalCanvas';
 import { ParamsMemorizer } from '../helpers/ParamsMemorizer/ParamsMemorizer';
 import { debounce } from '../utils/common';
 import { TableSchemaProps } from '../types/TableSchema.types';
+import { InputHandler } from './InputHandler/InputHandler';
 
 const DEBOUNCE_DELAY = 1000;
 
@@ -12,9 +13,16 @@ class Table extends TableSchema {
     private tableRenderer = new TableRenderer();
     private tableVirtualizer = new TableVirtualizer();
     private paramsMemorizer = new ParamsMemorizer<TableSchemaProps>();
+    private inputHandler = new InputHandler(
+        (props: Pick<TableSchemaProps, 'selectedCell'>) => this.update(props)
+    );
 
     constructor(props: TableSchemaProps) {
         super(props);
+
+        if (props.keyControl) {
+            this.inputHandler.startListening();
+        }
 
         this.addResizeListener();
     }
@@ -31,7 +39,7 @@ class Table extends TableSchema {
         }
     }
 
-    public render(props?: TableSchemaProps) {
+    private render(props?: TableSchemaProps) {
         this.paramsMemorizer.stopQueuing();
 
         if (this.tableRenderer.isRendered) {
@@ -60,6 +68,7 @@ class Table extends TableSchema {
             },
             {
                 forceRerender: !!tableProps?.forceRerender,
+                hideCursor: this.hideCursor,
             }
         );
 

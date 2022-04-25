@@ -1,6 +1,6 @@
 import { Table } from '../Table/Table';
 import { sleep } from '../utils/common';
-import { Centering, ColorCodes, Expansion, ModeCodes } from '../constants/common';
+import { Centering, ColorCodes, Expansion } from '../constants/common';
 
 async function playground() {
     const content = [
@@ -10,45 +10,19 @@ async function playground() {
     ];
 
     const table = new Table({
+        hideCursor: true,
         horizontalCentering: Centering.Right,
         verticalCentering: Centering.Right,
         expansion: {
             type: Expansion.Auto,
-            paddingHorizontal: '10%',
-            paddingVertical: 6,
+            paddingHorizontal: 2,
         },
         content,
         style: {
-            rows: {
-                1: {
-                    color: ColorCodes.BLUE,
-                    mode: ModeCodes.BACKGROUND,
-                    border: {
-                        top: {
-                            color: ColorCodes.BLACK,
-                            mode: ModeCodes.BACKGROUND,
-                        },
-                        left: {
-                            color: ColorCodes.YELLOW,
-                            mode: ModeCodes.BACKGROUND,
-                        },
-                        right: {
-                            color: ColorCodes.CYAN,
-                            mode: ModeCodes.BACKGROUND,
-                        },
-                        bottom: {
-                            color: ColorCodes.GREEN,
-                            mode: ModeCodes.BACKGROUND,
-                        },
-                    },
-                },
-                2: {
-                    color: ColorCodes.YELLOW,
-                    mode: ModeCodes.BACKGROUND,
-                    border: {
-                        color: ColorCodes.RED,
-                        mode: ModeCodes.BACKGROUND,
-                    },
+            selected: {
+                color: ColorCodes.RED,
+                border: {
+                    color: ColorCodes.RED,
                 },
             },
         },
@@ -56,8 +30,6 @@ async function playground() {
 
     let i = 1;
     while (i++) {
-        await sleep(100);
-
         content[0][0] = String(i % 10);
 
         table.update({
@@ -65,6 +37,8 @@ async function playground() {
             horizontalCentering: Centering.Center,
             content,
         });
+
+        await sleep(100);
     }
 }
 

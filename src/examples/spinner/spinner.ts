@@ -64,7 +64,6 @@ async function spinnerExample() {
 
         table.update({
             content,
-            // style,
         });
 
         clearPositions([positionA, positionB, positionC, positionD], content);

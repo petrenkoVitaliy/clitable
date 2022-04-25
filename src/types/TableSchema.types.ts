@@ -44,7 +44,9 @@ type GenericStyleModel<T> = {
 
 export type ParsedStyleModel = GenericStyleModel<ParsedCellStyle>;
 
-export type StyleModel = GenericStyleModel<CellStyle> | CellStyle;
+export type StyleModel =
+    | (GenericStyleModel<CellStyle> & { selected?: CellStyle })
+    | CellStyle;
 
 export type StyleSchema = CellStyle[][];
 
@@ -55,9 +57,12 @@ export type TableSchemaProps = {
     verticalCentering?: Centering;
     expansion?: ExpansionParams;
     style?: StyleModel;
+    selectedCell?: SelectedCell | undefined;
 
     forceRerender?: boolean;
     rerenderOnResize?: boolean;
+    hideCursor?: boolean;
+    keyControl?: boolean;
 };
 
 export type CellsSizes = {
@@ -71,3 +76,5 @@ export type TableSize = {
 };
 
 export type TerminalSize = { cols: number; rows: number };
+
+export type SelectedCell = { row: number; column: number };

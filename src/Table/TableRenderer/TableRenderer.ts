@@ -110,11 +110,13 @@ class TableRenderer {
             styleSchema: StyleSchema;
             cellsSizes: CellsSizes;
         },
-        options?: { forceRerender?: boolean }
+        options?: { forceRerender?: boolean; hideCursor: boolean }
     ) {
         const { virtualTable, virtualTableDiff, styleSchema, cellsSizes } = params;
 
-        TerminalCanvas.hideCursor();
+        if (!options?.hideCursor) {
+            TerminalCanvas.hideCursor();
+        }
 
         if (!this.isRendered) {
             TerminalCanvas.print(END_LINE);
@@ -128,7 +130,9 @@ class TableRenderer {
 
         this.isRendered = true;
 
-        TerminalCanvas.showCursor();
+        if (!options?.hideCursor) {
+            TerminalCanvas.showCursor();
+        }
     }
 
     public clearTable() {

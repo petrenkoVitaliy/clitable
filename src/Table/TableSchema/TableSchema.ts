@@ -4,7 +4,7 @@ import { ContentModule } from './modules/ContentModule/ContentModule';
 import { ExpansionModule } from './modules/ExpansionModule/ExpansionModule';
 import { TerminalCanvas } from '../../helpers/TerminalCanvas/TerminalCanvas';
 import { Centering, Expansion } from '../../constants/common';
-import { TableSchemaProps } from '../../types/TableSchema.types';
+import { SelectedCell, TableSchemaProps } from '../../types/TableSchema.types';
 import { ExpansionParams } from '../../types/ExpansionModule.types';
 
 class TableSchema {
@@ -14,7 +14,10 @@ class TableSchema {
     private rowsModule = new RowsModule();
 
     protected rerenderOnResize: boolean = true;
+    protected hideCursor: boolean = false;
+    protected keyControl: boolean = false;
 
+    private selectedCell: SelectedCell | undefined = undefined;
     private terminalSize = { ...TerminalCanvas.getTerminalSize() };
     private horizontalCentering: Centering = Centering.Center;
     private verticalCentering: Centering = Centering.Center;
@@ -68,6 +71,17 @@ class TableSchema {
             this.rerenderOnResize = props.rerenderOnResize;
         }
 
+        if (props.keyControl !== undefined) {
+            this.keyControl = props.keyControl;
+        }
+
+        if (props.hideCursor !== undefined) {
+            this.hideCursor = props.hideCursor;
+            if (this.hideCursor) {
+                TerminalCanvas.hideCursor();
+            }
+        }
+
         if (props.expansion) {
             this.expansionParams = props.expansion;
         }
@@ -82,13 +96,25 @@ class TableSchema {
             this.setCellsSize();
         }
 
+        if (props.selectedCell) {
+            this.selectedCell = props.selectedCell;
+        }
+
         if (props.style) {
             this.styleModule.parseStyleModel({
                 styleModel: props.style,
-                tableWidth: this.expansionModule.tableWidth,
 
                 tableSize: this.contentModule.tableSize,
                 cellsSizes: this.expansionModule.cellsSizes,
+                selectedCell: this.selectedCell,
+            });
+        }
+
+        if (props.selectedCell && !props.style) {
+            this.styleModule.buildStyleSchema({
+                tableSize: this.contentModule.tableSize,
+                cellsSizes: this.expansionModule.cellsSizes,
+                selectedCell: this.selectedCell,
             });
         }
     }
@@ -107,6 +133,7 @@ class TableSchema {
         this.styleModule.buildStyleSchema({
             tableSize: this.contentModule.tableSize,
             cellsSizes: this.expansionModule.cellsSizes,
+            selectedCell: this.selectedCell,
         });
     }
 }

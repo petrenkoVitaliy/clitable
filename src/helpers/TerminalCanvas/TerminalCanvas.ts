@@ -32,12 +32,16 @@ class TerminalCanvas {
         this.print(`${ESC}?25h`);
     }
 
-    // relative
+    /**
+     * relative
+     */
     private static moveCursor(x: number, y?: number) {
         process.stdout.moveCursor(x, y || 0);
     }
 
-    // absolute
+    /**
+     * absolute
+     */
     public static cursorTo(x: number, y?: number) {
         process.stdout.cursorTo(x, y);
     }

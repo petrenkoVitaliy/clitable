@@ -47,48 +47,45 @@ class TableVirtualizer {
         const virtualTableDiff: VirtualTableDiff = [];
 
         for (let i = 0; i < rows; i++) {
-            if (prevTable[i] !== table[i]) {
-                virtualTableDiff[i] = [];
+            virtualTableDiff[i] = [];
 
-                if (!prevTable[i] && table[i]) {
-                    virtualTableDiff[i]?.push({
-                        colIndex: 0,
-                        value: table[i],
-                    });
-                }
+            if (!prevTable[i] && table[i]) {
+                virtualTableDiff[i]?.push({
+                    colIndex: 0,
+                    value: table[i],
+                });
+            }
 
-                if (!table[i] && prevTable[i]) {
-                    virtualTableDiff[i] = null;
-                }
+            if (!table[i] && prevTable[i]) {
+                virtualTableDiff[i] = null;
+            }
 
-                if (table[i] && prevTable[i]) {
-                    const changedCols: RowDiff = [];
+            if (table[i] && prevTable[i]) {
+                const changedCols: RowDiff = [];
 
-                    const rowLength = Math.max(prevTable[i].length, table[i].length);
+                const rowLength = Math.max(prevTable[i].length, table[i].length);
 
-                    for (let j = 0; j < rowLength; j++) {
-                        let changedSubstring = '';
-                        let k = j;
+                for (let j = 0; j < rowLength; j++) {
+                    let changedSubstring = '';
+                    let k = j;
 
-                        while (
-                            (k < rowLength && prevTable[i][k] !== table[i][k]) ||
-                            prevStyleSchema[i]?.[k] !== styleSchema[i]?.[k]
-                        ) {
-                            changedSubstring += table[i][k] || ' ';
-                            k++;
-                        }
-
-                        if (changedSubstring) {
-                            changedCols.push({ colIndex: j, value: changedSubstring });
-                        }
-
-                        j = k;
+                    while (
+                        (k < rowLength && prevTable[i][k] !== table[i][k]) ||
+                        prevStyleSchema[i]?.[k] !== styleSchema[i]?.[k]
+                    ) {
+                        changedSubstring += table[i][k] || ' ';
+                        k++;
                     }
 
-                    virtualTableDiff[i] = changedCols;
+                    if (changedSubstring) {
+                        changedCols.push({ colIndex: j, value: changedSubstring });
+                    }
+
+                    j = k;
                 }
-            } else {
-                virtualTableDiff[i] = undefined;
+
+                virtualTableDiff[i] =
+                    changedCols && changedCols.length ? changedCols : undefined;
             }
         }
 
@@ -96,7 +93,6 @@ class TableVirtualizer {
     }
 
     private getTableValues(params: RendererProps): CellValue[][] {
-        // TODO - check entities vs instance
         this.cellCenteringModule.updateStyle({
             horizontalCentering: params.horizontalCentering,
             verticalCentering: params.verticalCentering,
