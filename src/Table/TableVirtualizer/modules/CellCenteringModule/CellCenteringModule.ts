@@ -1,15 +1,14 @@
-import { END_LINE } from '../../Table/constants';
-import { getCharsCount } from '../../utils/common';
-import { CellCenteringType } from './constants';
-import { CellValue } from './types';
+import { cropToLength, getCharsCount } from '../../../../utils/common';
+import { Centering, END_LINE } from '../../../../constants/common';
+import { CellValue } from '../../../../types/CellCenteringModule.types';
 
-class CellStylist {
-    private horizontalCentering: CellCenteringType = CellCenteringType.Center;
-    private verticalCentering: CellCenteringType = CellCenteringType.Center;
+class CellCenteringModule {
+    private horizontalCentering: Centering = Centering.Center;
+    private verticalCentering: Centering = Centering.Center;
 
     constructor(params?: {
-        verticalCentering: CellCenteringType;
-        horizontalCentering: CellCenteringType;
+        verticalCentering: Centering;
+        horizontalCentering: Centering;
     }) {
         if (params) {
             this.updateStyle(params);
@@ -17,12 +16,11 @@ class CellStylist {
     }
 
     public updateStyle(params: {
-        verticalCentering: CellCenteringType;
-        horizontalCentering: CellCenteringType;
+        verticalCentering: Centering;
+        horizontalCentering: Centering;
     }) {
-        this.horizontalCentering =
-            params?.horizontalCentering || CellCenteringType.Center;
-        this.verticalCentering = params?.verticalCentering || CellCenteringType.Center;
+        this.horizontalCentering = params?.horizontalCentering || Centering.Center;
+        this.verticalCentering = params?.verticalCentering || Centering.Center;
     }
 
     public styleCellValue(params: {
@@ -50,13 +48,7 @@ class CellStylist {
             }
 
             if (valueLine.length >= params.cellWidth) {
-                acc[lineIndex] = valueLine;
-
-                return acc;
-            }
-
-            if (valueLine.length > params.cellWidth) {
-                acc[lineIndex] = valueLine.slice(0, params.cellWidth);
+                acc[lineIndex] = cropToLength(valueLine, params.cellWidth);
 
                 return acc;
             }
@@ -114,7 +106,7 @@ class CellStylist {
     }
 
     private cellCenteringStrategies: {
-        [key in CellCenteringType]: (
+        [key in Centering]: (
             cellSize: number,
             valueLength: number
         ) => {
@@ -122,7 +114,7 @@ class CellStylist {
             spacesAfter: number;
         };
     } = {
-        [CellCenteringType.Center]: (cellSize: number, valueLength: number) => {
+        [Centering.Center]: (cellSize: number, valueLength: number) => {
             const spacesCountsMap = this.getSpacesCountsMap();
             const spacesCount = cellSize - valueLength;
 
@@ -132,7 +124,7 @@ class CellStylist {
             return spacesCountsMap;
         },
 
-        [CellCenteringType.Left]: (cellSize: number, valueLength: number) => {
+        [Centering.Left]: (cellSize: number, valueLength: number) => {
             const spacesCountsMap = this.getSpacesCountsMap();
 
             spacesCountsMap.spacesBefore = 0;
@@ -141,7 +133,7 @@ class CellStylist {
             return spacesCountsMap;
         },
 
-        [CellCenteringType.Right]: (cellSize: number, valueLength: number) => {
+        [Centering.Right]: (cellSize: number, valueLength: number) => {
             const spacesCountsMap = this.getSpacesCountsMap();
 
             spacesCountsMap.spacesBefore = cellSize - valueLength;
@@ -152,4 +144,4 @@ class CellStylist {
     };
 }
 
-export { CellStylist };
+export { CellCenteringModule };

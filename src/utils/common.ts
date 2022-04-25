@@ -1,11 +1,35 @@
-import { END_LINE } from '../Table/constants';
+import { END_LINE } from '../constants/common';
 
-export function cropToLength(str: string, length: number): string {
-    return str.length > length ? str.slice(0, length) : str;
+export function cropToLength(str: string, length?: number): string {
+    return length !== undefined && str.length > length ? str.slice(0, length) : str;
 }
 
 export function getCharsCount(str: string, char: string): number {
     return (str.match(new RegExp(char, 'g')) || []).length;
+}
+
+export function removeDeltaFromArray(values: number[], delta: number): number[] {
+    const elementDifference = Math.round(delta / values.length);
+
+    return values.map((value, index) => {
+        if (index === values.length - 1) {
+            return value - delta;
+        }
+
+        if (delta > elementDifference) {
+            delta -= elementDifference;
+
+            return value - elementDifference;
+        }
+
+        if (delta) {
+            delta = 0;
+
+            return value - delta;
+        }
+
+        return value;
+    });
 }
 
 export function getValueWidth(str: string): number {

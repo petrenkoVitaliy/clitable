@@ -1,7 +1,25 @@
-import { cropToLength } from '../../utils/common';
+import { cropToLength } from '../../../../../utils/common';
+import {
+    LinePartial,
+    LinePartialGenerationProps,
+} from '../../../../../types/RowsModule.types';
 
-import { BORDERS } from './constants';
-import { LinePartial, LinePartialGenerationProps } from './types';
+export const BORDERS = {
+    horizontal: '─',
+    vertical: '│',
+
+    topCenter: '┬',
+    topLeft: '┌',
+    topRight: '┐',
+
+    middleCenter: '┼',
+    middleLeft: '├',
+    middleRight: '┤',
+
+    bottomCenter: '┴',
+    bottomRight: '┘',
+    bottomLeft: '└',
+};
 
 abstract class LinesConstructor {
     private static buildLinePartial = (linePartial: LinePartial, lineIndex: number) => {
@@ -24,8 +42,6 @@ abstract class LinesConstructor {
         maxAllowedLength?: number | undefined;
         rowSize?: number;
     }): string[] => {
-        // TODO - 5 - use maxAllowedLength ;)
-
         const rowSize = params.rowSize || 1;
 
         const rowLines: string[] = [];
@@ -39,7 +55,7 @@ abstract class LinesConstructor {
                 )
                 .join('');
 
-            rowLines.push(line);
+            rowLines.push(cropToLength(line, params.maxAllowedLength));
         }
 
         return rowLines;

@@ -1,4 +1,4 @@
-import { CellValue } from '../CellStylist/types';
+import { CellValue } from './CellCenteringModule.types';
 
 export type LinePartial = {
     partial: string;

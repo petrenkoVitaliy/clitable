@@ -1,35 +1,69 @@
 import { Table } from '../Table/Table';
-import { CellCenteringType } from '../modules/CellStylist/constants';
-import { ExpansionType } from '../modules/ExpansionManager/constants';
 import { sleep } from '../utils/common';
+import { Centering, ColorCodes, Expansion, ModeCodes } from '../constants/common';
 
 async function playground() {
     const content = [
         ['A1\nA11\nA22', 'A2', 'A3', 'A4', 'A5'],
-        ['B1', 'B2', 'B3', 'B4', 'B5\nB6\nB7'],
+        ['A1', 'A2', 'A3', 'B4', 'A5'],
+        ['A1', 'A2', 'A3', 'B4', 'A5'],
     ];
 
     const table = new Table({
-        horizontalCentering: CellCenteringType.Right,
-        verticalCentering: CellCenteringType.Right,
+        horizontalCentering: Centering.Right,
+        verticalCentering: Centering.Right,
         expansion: {
-            expansionType: ExpansionType.Responsive,
-            tableWidth: '30%',
-            tableHeight: 20,
+            type: Expansion.Auto,
+            paddingHorizontal: '10%',
+            paddingVertical: 6,
         },
-        contentRows: content,
+        content,
+        style: {
+            rows: {
+                1: {
+                    color: ColorCodes.BLUE,
+                    mode: ModeCodes.BACKGROUND,
+                    border: {
+                        top: {
+                            color: ColorCodes.BLACK,
+                            mode: ModeCodes.BACKGROUND,
+                        },
+                        left: {
+                            color: ColorCodes.YELLOW,
+                            mode: ModeCodes.BACKGROUND,
+                        },
+                        right: {
+                            color: ColorCodes.CYAN,
+                            mode: ModeCodes.BACKGROUND,
+                        },
+                        bottom: {
+                            color: ColorCodes.GREEN,
+                            mode: ModeCodes.BACKGROUND,
+                        },
+                    },
+                },
+                2: {
+                    color: ColorCodes.YELLOW,
+                    mode: ModeCodes.BACKGROUND,
+                    border: {
+                        color: ColorCodes.RED,
+                        mode: ModeCodes.BACKGROUND,
+                    },
+                },
+            },
+        },
     });
 
-    while (1) {
-        await sleep(500);
+    let i = 1;
+    while (i++) {
+        await sleep(100);
 
-        table.render({
-            expansion: {
-                expansionType: ExpansionType.Responsive,
-                tableWidth: '30%',
-                tableHeight: 20,
-            },
-            contentRows: content,
+        content[0][0] = String(i % 10);
+
+        table.update({
+            verticalCentering: Centering.Center,
+            horizontalCentering: Centering.Center,
+            content,
         });
     }
 }

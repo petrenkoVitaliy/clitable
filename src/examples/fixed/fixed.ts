@@ -1,5 +1,5 @@
+import { Expansion } from '../../constants/common';
 import { Table } from '../../Table/Table';
-import { ExpansionType } from '../../modules/ExpansionManager/constants';
 
 async function fixedExample() {
     const content = [
@@ -9,21 +9,21 @@ async function fixedExample() {
 
     new Table({
         expansion: {
-            expansionType: ExpansionType.Fixed,
+            type: Expansion.Fixed,
             columnsSize: 6,
             rowsSize: 6,
         },
-        contentRows: content,
-    }).render();
+        content,
+    }).update();
 
     new Table({
         expansion: {
-            expansionType: ExpansionType.Fixed,
+            type: Expansion.Fixed,
             columnsSize: 2,
             rowsSize: 2,
         },
-        contentRows: content,
-    }).render();
+        content,
+    }).update();
 }
 
 export default fixedExample;

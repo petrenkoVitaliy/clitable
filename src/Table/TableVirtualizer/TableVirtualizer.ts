@@ -1,20 +1,17 @@
-import { CellStylist } from '../../modules/CellStylist/CellStylist';
-import { CellValue } from '../../modules/CellStylist/types';
-import { RendererProps } from '../TableRenderer/types';
-import { RowDiff, VirtualTableDiff } from './types';
+import { CellCenteringModule } from './modules/CellCenteringModule/CellCenteringModule';
+import { CellValue } from '../../types/CellCenteringModule.types';
+import { StyleSchema } from '../../types/TableSchema.types';
+import { RendererProps } from '../../types/TableRenderer.types';
+import { RowDiff, VirtualTableDiff } from '../../types/TableVirtualizer.types';
 
 class TableVirtualizer {
     private isCropping = true;
 
-    private cellStylist: CellStylist;
+    private cellCenteringModule = new CellCenteringModule();
 
     private virtualTable: string[] = [];
-
     private virtualTableDiff: VirtualTableDiff = [];
-
-    constructor() {
-        this.cellStylist = new CellStylist();
-    }
+    private styleSchema: StyleSchema = [];
 
     public updateVirtualTable(params: RendererProps): {
         virtualTable: string[];
@@ -22,9 +19,14 @@ class TableVirtualizer {
     } {
         const virtualTable = this.createVirtualTable(params);
 
-        this.updateTableDifference(this.virtualTable, virtualTable);
-
+        this.virtualTableDiff = this.getTableDifference({
+            prevTable: this.virtualTable,
+            table: virtualTable,
+            prevStyleSchema: this.styleSchema,
+            styleSchema: params.styleSchema,
+        });
         this.virtualTable = virtualTable;
+        this.styleSchema = params.styleSchema;
 
         return {
             virtualTable: this.virtualTable,
@@ -32,7 +34,14 @@ class TableVirtualizer {
         };
     }
 
-    private updateTableDifference(prevTable: string[], table: string[]): void {
+    private getTableDifference(params: {
+        prevTable: string[];
+        table: string[];
+        prevStyleSchema: StyleSchema;
+        styleSchema: StyleSchema;
+    }) {
+        const { prevTable, table, prevStyleSchema, styleSchema } = params;
+
         const rows = Math.max(prevTable.length, table.length);
 
         const virtualTableDiff: VirtualTableDiff = [];
@@ -61,7 +70,10 @@ class TableVirtualizer {
                         let changedSubstring = '';
                         let k = j;
 
-                        while (k < rowLength && prevTable[i][k] !== table[i][k]) {
+                        while (
+                            (k < rowLength && prevTable[i][k] !== table[i][k]) ||
+                            prevStyleSchema[i]?.[k] !== styleSchema[i]?.[k]
+                        ) {
                             changedSubstring += table[i][k] || ' ';
                             k++;
                         }
@@ -80,12 +92,12 @@ class TableVirtualizer {
             }
         }
 
-        this.virtualTableDiff = virtualTableDiff;
+        return virtualTableDiff;
     }
 
     private getTableValues(params: RendererProps): CellValue[][] {
-        // TODO - 2 - check entities vs instance
-        this.cellStylist.updateStyle({
+        // TODO - check entities vs instance
+        this.cellCenteringModule.updateStyle({
             horizontalCentering: params.horizontalCentering,
             verticalCentering: params.verticalCentering,
         });
@@ -94,7 +106,7 @@ class TableVirtualizer {
             const tableValuesRow: CellValue[] = [];
 
             contentRow.forEach((cellValue, columnIndex) => {
-                const value = this.cellStylist.styleCellValue({
+                const value = this.cellCenteringModule.styleCellValue({
                     cellWidth: params.cellsSizes.cols[columnIndex],
                     cellHeight: params.cellsSizes.rows[rowIndex],
                     cellValue,

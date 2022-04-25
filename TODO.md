@@ -7,7 +7,8 @@ GLOSSARY:
 
 TODO:
 
-1. TODO - 2 - check entities vs instance
-3. cli handling (to invoke force rerender for ex.)
-4. TODO - 5 - Cropping check
-5. Resize handle
+1. TODO - check entities vs instance
+2. cli handling (to invoke force rerender for ex.)
+3. TODO forceRerender 
+4. add comments
+5. proxy??

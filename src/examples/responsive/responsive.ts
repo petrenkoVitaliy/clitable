@@ -1,7 +1,6 @@
 import { Table } from '../../Table/Table';
-import { CellCenteringType } from '../../modules/CellStylist/constants';
-import { ExpansionType } from '../../modules/ExpansionManager/constants';
 import { sleep } from '../../utils/common';
+import { Centering, ColorCodes, Expansion, ModeCodes } from '../../constants/common';
 
 async function responsiveExample() {
     const content = [
@@ -10,31 +9,33 @@ async function responsiveExample() {
     ];
 
     new Table({
-        horizontalCentering: CellCenteringType.Right,
+        horizontalCentering: Centering.Right,
         expansion: {
-            expansionType: ExpansionType.Responsive,
+            type: Expansion.Responsive,
             tableWidth: '30%',
         },
-        contentRows: content,
-    }).render();
+        content,
+    }).update();
 
     new Table({
-        horizontalCentering: CellCenteringType.Left,
+        horizontalCentering: Centering.Left,
         expansion: {
-            expansionType: ExpansionType.Responsive,
+            type: Expansion.Responsive,
             tableWidth: '50%',
             tableHeight: 11,
         },
-        contentRows: content,
-    }).render();
+        content,
+    }).update();
 
     new Table({
         expansion: {
-            expansionType: ExpansionType.Responsive,
+            type: Expansion.Responsive,
             tableWidth: '100%',
         },
-        contentRows: content,
-    }).render();
+        content,
+    }).update();
+
+    const table = new Table({});
 
     const widthSizes: Array<number | `${number}%`> = [
         '100%',
@@ -52,17 +53,61 @@ async function responsiveExample() {
 
     const heightSizes: Array<number> = [5, 7, 9];
 
-    const table = new Table({});
-
     let i = 0;
     while (++i) {
-        table.render({
+        table.update({
             expansion: {
-                expansionType: ExpansionType.Responsive,
+                type: Expansion.Responsive,
                 tableWidth: widthSizes[i % widthSizes.length],
                 tableHeight: heightSizes[i % heightSizes.length],
             },
-            contentRows: content,
+            content,
+            style: [
+                [
+                    {
+                        color: ColorCodes.GREEN,
+                        mode: ModeCodes.BACKGROUND,
+                    },
+                    {
+                        color: ColorCodes.RED,
+                        mode: ModeCodes.BACKGROUND,
+                    },
+                    {
+                        color: ColorCodes.GREEN,
+                        mode: ModeCodes.BACKGROUND,
+                    },
+                    {
+                        color: ColorCodes.RED,
+                        mode: ModeCodes.BACKGROUND,
+                    },
+                    {
+                        color: ColorCodes.GREEN,
+                        mode: ModeCodes.BACKGROUND,
+                    },
+                ],
+                [
+                    {
+                        color: ColorCodes.GREEN,
+                        mode: ModeCodes.BACKGROUND,
+                    },
+                    {
+                        color: ColorCodes.RED,
+                        mode: ModeCodes.BACKGROUND,
+                    },
+                    {
+                        color: ColorCodes.GREEN,
+                        mode: ModeCodes.BACKGROUND,
+                    },
+                    {
+                        color: ColorCodes.RED,
+                        mode: ModeCodes.BACKGROUND,
+                    },
+                    {
+                        color: ColorCodes.GREEN,
+                        mode: ModeCodes.BACKGROUND,
+                    },
+                ],
+            ],
         });
 
         await sleep(300);

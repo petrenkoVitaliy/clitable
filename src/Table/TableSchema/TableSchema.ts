@@ -1,32 +1,25 @@
-import { ExpansionType } from '../../modules/ExpansionManager/constants';
-import { RowsConstructor } from '../../modules/RowsConstructor/RowsConstructor';
-import { ExpansionParams } from '../../modules/ExpansionManager/types';
-import { ExpansionManager } from '../../modules/ExpansionManager/ExpansionManager';
-import { CellCenteringType } from '../../modules/CellStylist/constants';
-
-import { BORDER_SIZE } from '../constants';
-import { CellsSizes, TableSchemaProps } from './types';
-import { TerminalCanvas } from '../../modules/TerminalCanvas/TerminalCanvas';
-import { RowsStructure } from '../../modules/RowsConstructor/types';
+import { RowsModule } from './modules/RowsModule/RowsModule';
+import { StyleModule } from './modules/StyleModule/StyleModule';
+import { ContentModule } from './modules/ContentModule/ContentModule';
+import { ExpansionModule } from './modules/ExpansionModule/ExpansionModule';
+import { TerminalCanvas } from '../../helpers/TerminalCanvas/TerminalCanvas';
+import { Centering, Expansion } from '../../constants/common';
+import { TableSchemaProps } from '../../types/TableSchema.types';
+import { ExpansionParams } from '../../types/ExpansionModule.types';
 
 class TableSchema {
-    protected content: string[][] = [];
-    protected rowsStructure: RowsStructure = [];
-    protected horizontalCentering: CellCenteringType = CellCenteringType.Center;
-    protected verticalCentering: CellCenteringType = CellCenteringType.Center;
-    protected terminalSize = { ...TerminalCanvas.getTerminalSize() };
-    protected tableHeight: number = 0;
+    private styleModule = new StyleModule();
+    private contentModule = new ContentModule();
+    private expansionModule = new ExpansionModule();
+    private rowsModule = new RowsModule();
+
     protected rerenderOnResize: boolean = true;
-    protected expansionParams: ExpansionParams = {
-        expansionType: ExpansionType.Auto,
-    };
-    protected cellsSizes: CellsSizes = {
-        cols: [],
-        rows: [],
-    };
-    protected tableSize = {
-        rows: 0,
-        cols: 0,
+
+    private terminalSize = { ...TerminalCanvas.getTerminalSize() };
+    private horizontalCentering: Centering = Centering.Center;
+    private verticalCentering: Centering = Centering.Center;
+    private expansionParams: ExpansionParams = {
+        type: Expansion.Auto,
     };
 
     constructor(props: TableSchemaProps) {
@@ -41,18 +34,27 @@ class TableSchema {
 
     protected getRenderParams() {
         return {
-            cellsSizes: this.cellsSizes,
-            content: this.content,
-            rowsStructure: this.rowsStructure,
-            tableHeight: this.tableHeight,
+            tableHeight: this.expansionModule.tableHeight,
             horizontalCentering: this.horizontalCentering,
             verticalCentering: this.verticalCentering,
             terminalSize: this.terminalSize,
+
+            rowsStructure: this.rowsModule.rowsStructure,
+            cellsSizes: this.expansionModule.cellsSizes,
+            content: this.contentModule.content,
+            styleSchema: this.styleModule.schema,
         };
     }
 
     private parseTableProps(props: TableSchemaProps) {
         const terminalSize = { ...TerminalCanvas.getTerminalSize() };
+        const isTerminalSizeChanged =
+            this.terminalSize.cols !== terminalSize.cols ||
+            this.terminalSize.rows !== terminalSize.rows;
+
+        if (isTerminalSizeChanged) {
+            this.terminalSize = terminalSize;
+        }
 
         if (props.horizontalCentering) {
             this.horizontalCentering = props.horizontalCentering;
@@ -70,66 +72,42 @@ class TableSchema {
             this.expansionParams = props.expansion;
         }
 
-        if (props.contentRows) {
-            this.parseContent(props.contentRows);
-        } else {
-            const isTerminalSizeChanged =
-                this.terminalSize.cols !== terminalSize.cols ||
-                this.terminalSize.rows !== terminalSize.rows;
+        if (props.content) {
+            this.contentModule.parseContent(props.content);
+            this.setRowsStructure();
+            this.setCellsSize();
+        }
 
-            if (isTerminalSizeChanged) {
-                this.terminalSize = terminalSize;
+        if (!props.content && isTerminalSizeChanged) {
+            this.setCellsSize();
+        }
 
-                this.setCellsSize();
-            }
+        if (props.style) {
+            this.styleModule.parseStyleModel({
+                styleModel: props.style,
+                tableWidth: this.expansionModule.tableWidth,
+
+                tableSize: this.contentModule.tableSize,
+                cellsSizes: this.expansionModule.cellsSizes,
+            });
         }
     }
 
     private setRowsStructure() {
-        this.rowsStructure = RowsConstructor.getRowsStructure(this.tableSize.rows);
-    }
-
-    private parseContent(contentRows: (string | number)[][]) {
-        this.tableSize.rows = contentRows.length;
-        this.tableSize.cols = 0;
-
-        contentRows.forEach((row) => {
-            if (row.length > this.tableSize.cols) {
-                this.tableSize.cols = row.length;
-            }
-        });
-
-        this.content = [[]];
-
-        for (let i = 0; i < this.tableSize.rows; i++) {
-            this.content[i] = [];
-
-            for (let j = 0; j < this.tableSize.cols; j++) {
-                this.content[i]![j] = contentRows?.[i]?.[j]
-                    ? String(contentRows[i][j])
-                    : '';
-            }
-        }
-
-        this.setCellsSize();
-        this.setRowsStructure();
+        this.rowsModule.buildRowsStructure(this.contentModule.tableSize.rows);
     }
 
     private setCellsSize() {
-        const sizes = ExpansionManager.getCellsSizes({
-            ...this.expansionParams,
-            content: this.content,
+        this.expansionModule.calculateCellsSizes({
+            expansionParams: this.expansionParams,
+            content: this.contentModule.content,
             terminalSize: this.terminalSize,
         });
 
-        this.cellsSizes = { ...sizes };
-
-        this.tableHeight =
-            BORDER_SIZE +
-            this.cellsSizes.rows.reduce(
-                (acc, rowSize) => (acc += rowSize + BORDER_SIZE),
-                0
-            );
+        this.styleModule.buildStyleSchema({
+            tableSize: this.contentModule.tableSize,
+            cellsSizes: this.expansionModule.cellsSizes,
+        });
     }
 }
 

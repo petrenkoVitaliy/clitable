@@ -1,7 +1,16 @@
 import { LinesConstructor } from './LinesConstructor';
+import {
+    LinePartialGenerationProps,
+    RowsBuilder,
+    RowsStructure,
+} from '../../../../../types/RowsModule.types';
 
-import { ROW_TYPES } from './constants';
-import { RowsStructure, LinePartialGenerationProps, RowsBuilder } from './types';
+enum ROW_TYPES {
+    Header = 'Header',
+    Footer = 'Footer',
+    Body = 'Body',
+    Single = 'Single',
+}
 
 class RowsConstructor extends LinesConstructor {
     private static rowTypes: {

@@ -1,7 +1,6 @@
 import { Table } from '../../Table/Table';
-import { CellCenteringType } from '../../modules/CellStylist/constants';
-import { ExpansionType } from '../../modules/ExpansionManager/constants';
 import { sleep } from '../../utils/common';
+import { Centering, Expansion } from '../../constants/common';
 
 async function autoExample() {
     const content = [
@@ -11,30 +10,30 @@ async function autoExample() {
 
     new Table({
         expansion: {
-            expansionType: ExpansionType.Auto,
+            type: Expansion.Auto,
         },
-        contentRows: content,
-    }).render();
+        content,
+    }).update();
 
     new Table({
-        horizontalCentering: CellCenteringType.Right,
+        horizontalCentering: Centering.Right,
         expansion: {
-            expansionType: ExpansionType.Auto,
-            marginVertical: 2,
-            marginHorizontal: 2,
+            type: Expansion.Auto,
+            paddingHorizontal: 2,
+            paddingVertical: 2,
         },
-        contentRows: content,
-    }).render();
+        content,
+    }).update();
 
     new Table({
-        horizontalCentering: CellCenteringType.Left,
+        horizontalCentering: Centering.Left,
         expansion: {
-            expansionType: ExpansionType.Auto,
-            marginVertical: 5,
-            marginHorizontal: 7,
+            type: Expansion.Auto,
+            paddingHorizontal: 5,
+            paddingVertical: 7,
         },
-        contentRows: content,
-    }).render();
+        content,
+    }).update();
 
     const words = [
         'Lorem ipsum\ndolor sit amet, consectetur ',
@@ -50,8 +49,8 @@ async function autoExample() {
     const changingContent = [['', '', '', '', '']];
     const table = new Table({
         expansion: {
-            expansionType: ExpansionType.Auto,
-            marginHorizontal: 5,
+            type: Expansion.Auto,
+            paddingHorizontal: 5,
         },
     });
 
@@ -62,8 +61,8 @@ async function autoExample() {
             changingContent[0][colIndex] = words[index];
         });
 
-        table.render({
-            contentRows: changingContent,
+        table.update({
+            content: changingContent,
         });
 
         await sleep(500);

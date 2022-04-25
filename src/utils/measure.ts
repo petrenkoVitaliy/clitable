@@ -1,15 +1,23 @@
-import { PercentMeasure } from '../modules/ExpansionManager/types';
+import { PercentMeasure } from '../types/ExpansionModule.types';
 
 type Measure = number | PercentMeasure;
-function parseMeasure(value: Measure, totalValue: number): number;
-function parseMeasure(value: Measure[], totalValue: number): number[];
-function parseMeasure(value: Measure | Measure[], totalValue: number): number | number[] {
+type Options = { percentMeasureMargin?: number };
+
+function parseMeasure(value: Measure, totalValue: number, options?: Options): number;
+function parseMeasure(value: Measure[], totalValue: number, options?: Options): number[];
+function parseMeasure(
+    value: Measure | Measure[],
+    totalValue: number,
+    options?: Options
+): number | number[] {
     if (Array.isArray(value)) {
-        return value.map((v) => parseMeasure(v, totalValue));
+        return value.map((v) => parseMeasure(v, totalValue, options));
     }
 
     if (typeof value === 'string') {
-        return convertPercentsToSize(value, totalValue);
+        const size = convertPercentsToSize(value, totalValue);
+
+        return options ? size - (options.percentMeasureMargin || 0) : size;
     }
 
     return value;

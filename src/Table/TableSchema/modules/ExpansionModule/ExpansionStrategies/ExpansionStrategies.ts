@@ -1,12 +1,18 @@
-import { END_LINE } from '../../Table/constants';
-import { CellsSizes, TerminalSize } from '../../Table/TableSchema/types';
-import { getCharsCount, getValueWidth } from '../../utils/common';
-import { getMeasuresSum, parseMeasure } from '../../utils/measure';
+import {
+    ExpansionTypeProps,
+    PercentMeasure,
+    ResizeParams,
+} from '../../../../../types/ExpansionModule.types';
+import { CellsSizes, TerminalSize } from '../../../../../types/TableSchema.types';
+import {
+    getCharsCount,
+    getValueWidth,
+    removeDeltaFromArray,
+} from '../../../../../utils/common';
+import { getMeasuresSum, parseMeasure } from '../../../../../utils/measure';
+import { END_LINE, Expansion } from '../../../../../constants/common';
 
-import { ExpansionType } from './constants';
-import { ExpansionTypeProps, ResizeParams, PercentMeasure } from './types';
-
-class ExpansionManager {
+class ExpansionStrategies {
     private static getEmptySizes(): CellsSizes {
         return {
             rows: [],
@@ -15,16 +21,27 @@ class ExpansionManager {
     }
 
     private static expansionTypeStrategy: {
-        [key in ExpansionType]: (params: ResizeParams<key>) => CellsSizes;
+        [key in Expansion]: (params: ResizeParams<key>) => CellsSizes;
     } = {
-        [ExpansionType.Auto]: (params: {
-            expansionType: ExpansionType.Auto;
+        [Expansion.Auto]: (params: {
+            type: Expansion.Auto;
             content: string[][];
-            marginVertical?: number;
-            marginHorizontal?: number;
+            paddingVertical?: number | PercentMeasure;
+            paddingHorizontal?: number | PercentMeasure;
+            terminalSize: TerminalSize;
         }) => {
+            const { terminalSize } = params;
+
+            const paddingHorizontal = parseMeasure(
+                params.paddingHorizontal || 0,
+                terminalSize.cols
+            );
+            const paddingVertical = parseMeasure(
+                params.paddingVertical || 0,
+                terminalSize.rows
+            );
+
             const sizes = this.getEmptySizes();
-            const { marginHorizontal = 0, marginVertical = 0 } = params;
 
             for (let j = 0; j < params.content[0].length; j++) {
                 sizes.cols[j] = 0;
@@ -36,12 +53,12 @@ class ExpansionManager {
 
                     if (params.content[i][j].length > sizes.cols[j]) {
                         sizes.cols[j] =
-                            getValueWidth(params.content[i][j]) + marginHorizontal;
+                            getValueWidth(params.content[i][j]) + paddingHorizontal;
                     }
 
                     const rowsInValue = getCharsCount(params.content[i][j], END_LINE) + 1;
                     if (rowsInValue > sizes.rows[i]) {
-                        sizes.rows[i] = rowsInValue + marginVertical;
+                        sizes.rows[i] = rowsInValue + paddingVertical;
                     }
                 }
             }
@@ -49,39 +66,60 @@ class ExpansionManager {
             return sizes;
         },
 
-        [ExpansionType.Fixed]: (params: {
-            expansionType: ExpansionType.Fixed;
-            columnsSize: number;
-            rowsSize: number;
+        [Expansion.Fixed]: (params: {
+            type: Expansion.Fixed;
+            columnsSize: number | PercentMeasure;
+            rowsSize: number | PercentMeasure;
             content: string[][];
+            terminalSize: TerminalSize;
+            marginVertical?: number;
+            marginHorizontal?: number;
         }) => {
+            const {
+                content,
+                terminalSize,
+                marginHorizontal = 0,
+                marginVertical = 0,
+            } = params;
+
+            const rowsSize = parseMeasure(params.rowsSize, terminalSize.cols);
+            const columnsSize = parseMeasure(params.columnsSize, terminalSize.cols);
+
             const sizes = this.getEmptySizes();
 
-            for (let j = 0; j < params.content[0].length; j++) {
-                sizes.cols[j] = params.columnsSize;
+            for (let j = 0; j < content[0].length; j++) {
+                sizes.cols[j] = columnsSize;
 
-                for (let i = 0; i < params.content.length; i++) {
-                    sizes.rows[i] = params.rowsSize;
+                for (let i = 0; i < content.length; i++) {
+                    sizes.rows[i] = rowsSize;
                 }
             }
+
+            sizes.cols = removeDeltaFromArray(sizes.cols, marginHorizontal);
+            sizes.rows = removeDeltaFromArray(sizes.rows, marginVertical);
 
             return sizes;
         },
 
-        [ExpansionType.Custom]: (params: {
-            expansionType: ExpansionType.Custom;
+        [Expansion.Custom]: (params: {
+            type: Expansion.Custom;
             columnsSizes: (number | PercentMeasure)[];
-            rowsSizes?: number[];
+            rowsSizes?: (number | PercentMeasure)[];
             content: string[][];
             terminalSize: TerminalSize;
         }) => {
-            const { rowsSizes, content, terminalSize } = params;
+            const { content, terminalSize } = params;
+
             const qualitativeColsSize = terminalSize.cols - content[0].length - 1;
             const columnsSizes = parseMeasure(params.columnsSizes, qualitativeColsSize);
 
+            // ( - 2) -> to leave empty line below for input
+            const qualitativeRowsSize = terminalSize.rows - content.length - 2;
+            const rowsSizes = parseMeasure(params.rowsSizes || [], qualitativeRowsSize);
+
             const sizesSum = {
                 cols: getMeasuresSum(params.columnsSizes, qualitativeColsSize),
-                rows: rowsSizes?.reduce((acc, rowSize) => (acc += rowSize), 0),
+                rows: getMeasuresSum(params.rowsSizes || [], qualitativeRowsSize),
             };
 
             const sizes = this.getEmptySizes();
@@ -96,34 +134,37 @@ class ExpansionManager {
             }
 
             for (let i = 0; i < content.length; i++) {
-                sizes.rows[i] = rowsSizes?.[i] || 1;
+                sizes.rows[i] = rowsSizes[i] || 1;
                 lengths.rows += sizes.rows[i];
             }
 
             sizes.cols[0] += sizesSum.cols - lengths.cols;
 
-            if (sizesSum.rows) {
+            if (sizesSum.rows !== 0) {
                 sizes.rows[0] += sizesSum.rows - lengths.rows;
             }
 
             return sizes;
         },
 
-        [ExpansionType.Responsive]: (params: {
-            expansionType: ExpansionType.Responsive;
+        [Expansion.Responsive]: (params: {
+            type: Expansion.Responsive;
             content: string[][];
             terminalSize: TerminalSize;
             tableWidth: number | PercentMeasure;
-            tableHeight?: number;
+            tableHeight?: number | PercentMeasure;
         }) => {
-            let tableHeight = params.tableHeight;
-
             const { content, terminalSize } = params;
 
             const tableWidth = parseMeasure(params.tableWidth, terminalSize.cols);
+            let tableHeight: number | undefined = params.tableHeight
+                ? parseMeasure(params.tableHeight, terminalSize.rows, {
+                      percentMeasureMargin: 1, // ( - 1 from size) -> to leave empty line below for input
+                  })
+                : undefined;
 
-            const autoSizes = this.expansionTypeStrategy[ExpansionType.Auto]({
-                expansionType: ExpansionType.Auto,
+            const autoSizes = this.expansionTypeStrategy[Expansion.Auto]({
+                type: Expansion.Auto,
                 content: content,
                 terminalSize: terminalSize,
             });
@@ -163,7 +204,14 @@ class ExpansionManager {
             };
 
             sizes.cols[0] += tableWidth - params.content[0].length - 1 - lengths.cols;
+            if (sizes.cols[0] < 0) {
+                sizes.cols[0] = 0;
+            }
+
             sizes.rows[0] += tableHeight - params.content.length - 1 - lengths.rows;
+            if (sizes.rows[0] < 0) {
+                sizes.rows[0] = 0;
+            }
 
             return sizes;
         },
@@ -173,7 +221,7 @@ class ExpansionManager {
         params: ResizeParams<T>
     ): CellsSizes {
         const strategy = this.expansionTypeStrategy[
-            params.expansionType
+            params.type
         ] as typeof this.expansionTypeStrategy[T]; // ¯\_(ツ)_/¯
 
         return strategy(params);
@@ -186,4 +234,4 @@ class ExpansionManager {
     }
 }
 
-export { ExpansionManager };
+export { ExpansionStrategies };
